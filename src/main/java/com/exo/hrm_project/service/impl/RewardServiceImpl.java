@@ -10,7 +10,7 @@ import com.exo.hrm_project.mapper.RewardMapper;
 import com.exo.hrm_project.mapper.common.GenericIdMapper;
 import com.exo.hrm_project.repository.GroupRewardRepository;
 import com.exo.hrm_project.repository.RewardRepository;
-import com.exo.hrm_project.service.ICurrencyService;
+import com.exo.hrm_project.service.IExternalService;
 import com.exo.hrm_project.service.IRewardService;
 import com.exo.hrm_project.specification.GenericSpecification;
 import com.exo.hrm_project.specification.SearchCriteria;
@@ -33,15 +33,12 @@ public class RewardServiceImpl implements IRewardService {
   private final RewardMapper rewardMapper;
   private final GroupRewardRepository groupRewardRepository;
   private final GenericIdMapper genericIdMapper;
-  private final UomServiceImpl uomServiceImpl;
-  private final ICurrencyService iCurrencyService;
+  private final IExternalService iExternalService;
 
   @Override
   public BaseResponse<ResponsePage<ListRewardDto>> getAll(Pageable pageable, String code,
       String name) {
-    BaseResponse<ResponsePage<ListRewardDto>> response = new BaseResponse<>();
     GenericSpecification<RewardEntity> spec = new GenericSpecification<>();
-
     if (code != null && !code.isEmpty()) {
       spec.add(new SearchCriteria("code", ":", code));
     }
@@ -126,8 +123,8 @@ public class RewardServiceImpl implements IRewardService {
     RewardEntity rewardEntity = rewardRepository.findById(id)
         .orElseThrow(() -> new NotFoundException("Not found allowance id : " + id));
     RewardDto dto = rewardMapper.toAddDto(rewardEntity);
-    dto.setUom(uomServiceImpl.getUomById(rewardEntity.getUomId()));
-    dto.setCurrency(iCurrencyService.getCurrencyById(rewardEntity.getCurrencyId()));
+    dto.setUom(iExternalService.getUomById(rewardEntity.getUomId()));
+    dto.setCurrency(iExternalService.getCurrencyById(rewardEntity.getCurrencyId()));
     response.setCode(HttpStatus.OK.value());
     response.setMessage("Update Allowance successfully");
     response.setData(dto);

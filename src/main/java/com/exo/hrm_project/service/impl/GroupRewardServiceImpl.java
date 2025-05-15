@@ -36,8 +36,6 @@ public class GroupRewardServiceImpl implements IGroupRewardService {
   @Override
   public BaseResponse<ResponsePage<ListGroupRewardDto>> getAllGroupReward(Pageable pageable,
       String code, String name) {
-    BaseResponse<ResponsePage<ListGroupRewardDto>> response = new BaseResponse<>();
-    ResponsePage<ListGroupRewardDto> responsePage = new ResponsePage<>();
     GenericSpecification<GroupRewardEntity> spec = new GenericSpecification<>();
     if (code != null && !code.isEmpty()) {
       spec.add(new SearchCriteria("code", ":", code));

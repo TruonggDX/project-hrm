@@ -39,7 +39,6 @@ public class AllowancePolicyServiceImpl implements IAllowancePolicyService {
   @Override
   public BaseResponse<ResponsePage<ListAllowancePolicyDto>> getAll(Pageable pageable,
       ListAllowancePolicyDto filter) {
-    BaseResponse<ResponsePage<ListAllowancePolicyDto>> response = new BaseResponse<>();
     GenericSpecification<AllowancePolicyEntity> spec = new GenericSpecification<>();
     if (filter.getCode() != null && !filter.getCode().isEmpty()) {
       spec.add(new SearchCriteria("code", ":", filter.getCode()));
@@ -112,6 +111,7 @@ public class AllowancePolicyServiceImpl implements IAllowancePolicyService {
 
   @Override
   public BaseResponse<AllowancePolicyDto> getAllowancePolicy(Long id) {
+
     return null;
   }
 

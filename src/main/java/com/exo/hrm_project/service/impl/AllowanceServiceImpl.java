@@ -11,7 +11,7 @@ import com.exo.hrm_project.mapper.common.GenericIdMapper;
 import com.exo.hrm_project.repository.AllowanceRepository;
 import com.exo.hrm_project.repository.GroupAllowanceRepository;
 import com.exo.hrm_project.service.IAllowanceService;
-import com.exo.hrm_project.service.ICurrencyService;
+import com.exo.hrm_project.service.IExternalService;
 import com.exo.hrm_project.specification.GenericSpecification;
 import com.exo.hrm_project.specification.SearchCriteria;
 import com.exo.hrm_project.utils.response.BaseResponse;
@@ -33,13 +33,11 @@ public class AllowanceServiceImpl implements IAllowanceService {
   private final AllowanceMapper allowanceMapper;
   private final GroupAllowanceRepository groupAllowanceRepository;
   private final GenericIdMapper genericIdMapper;
-  private final UomServiceImpl uomServiceImpl;
-  private final ICurrencyService iCurrencyService;
+  private final IExternalService iExternalService;
 
   @Override
   public BaseResponse<ResponsePage<ListAllowanceDto>> getAll(Pageable pageable, String code,
       String name, Boolean isActive) {
-    BaseResponse<ResponsePage<ListAllowanceDto>> response = new BaseResponse<>();
     GenericSpecification<AllowanceEntity> spec = new GenericSpecification<>();
     if (code != null && !code.isEmpty()) {
       spec.add(new SearchCriteria("code", ":", code));
@@ -128,8 +126,8 @@ public class AllowanceServiceImpl implements IAllowanceService {
     AllowanceEntity allowanceEntity = allowanceRepository.findById(id)
         .orElseThrow(() -> new NotFoundException("Not found allowance id : " + id));
     AllowanceDto dto = allowanceMapper.toAddDto(allowanceEntity);
-    dto.setUom(uomServiceImpl.getUomById(allowanceEntity.getUomId()));
-    dto.setCurrency(iCurrencyService.getCurrencyById(allowanceEntity.getCurrencyId()));
+    dto.setUom(iExternalService.getUomById(allowanceEntity.getUomId()));
+    dto.setCurrency(iExternalService.getCurrencyById(allowanceEntity.getCurrencyId()));
     response.setCode(HttpStatus.OK.value());
     response.setMessage("Update Allowance successfully");
     response.setData(dto);

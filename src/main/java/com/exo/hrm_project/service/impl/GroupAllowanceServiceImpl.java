@@ -17,7 +17,6 @@ import com.exo.hrm_project.utils.response.ResponseUtils;
 import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -33,8 +32,6 @@ public class GroupAllowanceServiceImpl implements IGroupAllowanceService {
 
   @Override
   public BaseResponse<ResponsePage<ListGroupAllowanceDto>> getAllGroupAllowance(Pageable pageable, String code, String name, Boolean isActive) {
-    BaseResponse<ResponsePage<ListGroupAllowanceDto>> response = new BaseResponse<>();
-    ResponsePage<ListGroupAllowanceDto> responsePage = new ResponsePage<>();
     GenericSpecification<GroupAllowanceEntity> spec = new GenericSpecification<>();
     if (code != null && !code.isEmpty()) {
       spec.add(new SearchCriteria("code", ":", code));
