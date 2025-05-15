@@ -15,6 +15,7 @@ import com.exo.hrm_project.specification.GenericSpecification;
 import com.exo.hrm_project.specification.SearchCriteria;
 import com.exo.hrm_project.utils.response.BaseResponse;
 import com.exo.hrm_project.utils.response.ResponsePage;
+import com.exo.hrm_project.utils.response.ResponseUtils;
 import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
@@ -47,17 +48,7 @@ public class GroupRewardServiceImpl implements IGroupRewardService {
     Page<GroupRewardEntity> page = repo.findAll(spec, pageable);
     List<ListGroupRewardDto> dtos = page.getContent().stream().map(groupRewardMapper::toDtoList)
         .toList();
-    responsePage.setPageNumber(page.getNumber());
-    responsePage.setPageSize(page.getSize());
-    responsePage.setTotalElements(page.getTotalElements());
-    responsePage.setTotalPages(page.getTotalPages());
-    responsePage.setContent(dtos);
-    responsePage.setNumberOfElements(page.getNumberOfElements());
-    responsePage.setSort(page.getSort().toString());
-    response.setData(responsePage);
-    response.setCode(HttpStatus.OK.value());
-    response.setMessage("Get All Group Reward");
-    return response;
+    return ResponseUtils.toPageResponse(page, dtos, "Get All Group Reward");
   }
 
   @Override

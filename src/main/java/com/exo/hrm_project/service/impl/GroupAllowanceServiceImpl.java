@@ -13,6 +13,7 @@ import com.exo.hrm_project.specification.GenericSpecification;
 import com.exo.hrm_project.specification.SearchCriteria;
 import com.exo.hrm_project.utils.response.BaseResponse;
 import com.exo.hrm_project.utils.response.ResponsePage;
+import com.exo.hrm_project.utils.response.ResponseUtils;
 import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
@@ -47,17 +48,7 @@ public class GroupAllowanceServiceImpl implements IGroupAllowanceService {
 
     Page<GroupAllowanceEntity> page = repo.findAll(spec, pageable);
     List<ListGroupAllowanceDto> dtos = page.getContent().stream().map(mapper::toDtoList).toList();
-    responsePage.setPageNumber(page.getNumber());
-    responsePage.setPageSize(page.getSize());
-    responsePage.setTotalElements(page.getTotalElements());
-    responsePage.setTotalPages(page.getTotalPages());
-    responsePage.setContent(dtos);
-    responsePage.setNumberOfElements(page.getNumberOfElements());
-    responsePage.setSort(page.getSort().toString());
-    response.setData(responsePage);
-    response.setCode(HttpStatus.OK.value());
-    response.setMessage("Get All GroupAllowance");
-    return response;
+    return ResponseUtils.toPageResponse(page, dtos, "Get All Group Allowance Policy");
   }
 
 

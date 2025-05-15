@@ -16,6 +16,7 @@ import com.exo.hrm_project.specification.GenericSpecification;
 import com.exo.hrm_project.specification.SearchCriteria;
 import com.exo.hrm_project.utils.response.BaseResponse;
 import com.exo.hrm_project.utils.response.ResponsePage;
+import com.exo.hrm_project.utils.response.ResponseUtils;
 import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
@@ -53,18 +54,7 @@ public class AllowanceServiceImpl implements IAllowanceService {
     List<ListAllowanceDto> allowanceDtos = page.getContent().stream()
         .map(allowanceMapper::toListDto)
         .toList();
-    ResponsePage<ListAllowanceDto> responsePage = new ResponsePage<>();
-    responsePage.setPageNumber(pageable.getPageNumber());
-    responsePage.setPageSize(pageable.getPageSize());
-    responsePage.setTotalElements(page.getTotalElements());
-    responsePage.setTotalPages(page.getTotalPages());
-    responsePage.setContent(allowanceDtos);
-    responsePage.setNumberOfElements(page.getNumberOfElements());
-    responsePage.setSort(page.getSort().toString());
-    response.setData(responsePage);
-    response.setMessage("Get All Allowance Policy");
-    response.setCode(HttpStatus.OK.value());
-    return response;
+    return ResponseUtils.toPageResponse(page, allowanceDtos, "Get All Allowance");
   }
 
   @Override

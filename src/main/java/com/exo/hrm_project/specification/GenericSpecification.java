@@ -20,7 +20,8 @@ public class GenericSpecification<T> implements Specification<T> {
 
     for (SearchCriteria criteria : criteriaList) {
       switch (criteria.getOperation()) {
-        case ":" -> predicates.add(cb.like(cb.lower(root.get(criteria.getKey())), "%" + criteria.getValue().toString().toLowerCase() + "%"));
+        case ":" -> predicates.add(cb.like(cb.lower(root.get(criteria.getKey())),
+            "%" + criteria.getValue().toString().toLowerCase() + "%"));
         case "=" -> predicates.add(cb.equal(root.get(criteria.getKey()), criteria.getValue()));
       }
     }

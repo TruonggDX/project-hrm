@@ -16,6 +16,7 @@ import com.exo.hrm_project.specification.GenericSpecification;
 import com.exo.hrm_project.specification.SearchCriteria;
 import com.exo.hrm_project.utils.response.BaseResponse;
 import com.exo.hrm_project.utils.response.ResponsePage;
+import com.exo.hrm_project.utils.response.ResponseUtils;
 import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
@@ -51,18 +52,7 @@ public class RewardServiceImpl implements IRewardService {
     List<ListRewardDto> rewardDtos = page.getContent().stream()
         .map(rewardMapper::toListDto)
         .toList();
-    ResponsePage<ListRewardDto> responsePage = new ResponsePage<>();
-    responsePage.setPageNumber(pageable.getPageNumber());
-    responsePage.setPageSize(pageable.getPageSize());
-    responsePage.setTotalElements(page.getTotalElements());
-    responsePage.setTotalPages(page.getTotalPages());
-    responsePage.setContent(rewardDtos);
-    responsePage.setNumberOfElements(page.getNumberOfElements());
-    responsePage.setSort(page.getSort().toString());
-    response.setData(responsePage);
-    response.setMessage("Get All Reward Policy");
-    response.setCode(HttpStatus.OK.value());
-    return response;
+    return ResponseUtils.toPageResponse(page, rewardDtos, "Get All Reward");
   }
 
   @Override
