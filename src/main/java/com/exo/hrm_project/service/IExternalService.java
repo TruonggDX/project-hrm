@@ -1,6 +1,7 @@
 package com.exo.hrm_project.service;
 
 import com.exo.hrm_project.dto.common.CommonDto;
+import java.util.List;
 
 public interface IExternalService {
 
@@ -8,9 +9,9 @@ public interface IExternalService {
 
   CommonDto getCurrencyById(Long id);
 
-  CommonDto getDepartmentById(Long id);
+  List<CommonDto> getEmployeeInfoByIds(List<Long> employeeIds);
 
-  CommonDto getEmployeeById(Long id);
+  List<CommonDto> getDepartmentInfoByIds(List<Long> departmentIds);
 
-  CommonDto getPositionById(Long id);
+  List<CommonDto> getPositionInfoByIds(List<Long> positionIds);
 }

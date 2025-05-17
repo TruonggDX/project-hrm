@@ -1,6 +1,7 @@
 package com.exo.hrm_project.service;
 
 import com.exo.hrm_project.dto.allowance_policy.AllowancePolicyDto;
+import com.exo.hrm_project.dto.allowance_policy.DetailAllowancePolicyDto;
 import com.exo.hrm_project.dto.allowance_policy.ListAllowancePolicyDto;
 import com.exo.hrm_project.dto.response.ResponseCommon;
 import com.exo.hrm_project.utils.response.BaseResponse;
@@ -16,7 +17,7 @@ public interface IAllowancePolicyService {
 
   BaseResponse<ResponseCommon> updateAllowancePolicy(AllowancePolicyDto allowancePolicyDto);
 
-  BaseResponse<AllowancePolicyDto> getAllowancePolicy(Long id);
+  BaseResponse<DetailAllowancePolicyDto> getAllowancePolicy(Long id);
 
   void deleteAllowancePolicy(Long id);
 }

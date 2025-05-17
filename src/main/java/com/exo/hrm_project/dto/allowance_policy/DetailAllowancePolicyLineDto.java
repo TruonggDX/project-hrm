@@ -1,14 +1,13 @@
 package com.exo.hrm_project.dto.allowance_policy;
 
-import com.exo.hrm_project.dto.common.CommonDto;
 import java.math.BigDecimal;
 import lombok.Data;
 
 @Data
-public class AllowancePolicyLineDto {
+public class DetailAllowancePolicyLineDto {
 
   private Long id;
-  private CommonDto allowance;
   private String cycle;
   private BigDecimal amount;
+  private DetailAllowanceDto allowance;
 }

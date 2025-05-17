@@ -7,7 +7,6 @@ import com.exo.hrm_project.dto.response.ResponseCommon;
 import com.exo.hrm_project.service.IAllowanceService;
 import com.exo.hrm_project.utils.response.BaseResponse;
 import com.exo.hrm_project.utils.response.ResponsePage;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -47,7 +46,7 @@ public class AllowanceController {
 
   @PutMapping()
   public ResponseEntity<BaseResponse<ResponseCommon>> updateAllowance(
-      @Valid @RequestBody AllowanceDto allowanceDto) {
+      @RequestBody AllowanceDto allowanceDto) {
     BaseResponse<ResponseCommon> response = iAllowanceService.updateAllowance(
         allowanceDto);
     return ResponseEntity.ok(response);

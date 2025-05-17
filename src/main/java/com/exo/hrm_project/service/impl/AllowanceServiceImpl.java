@@ -125,9 +125,7 @@ public class AllowanceServiceImpl implements IAllowanceService {
     BaseResponse<AllowanceDto> response = new BaseResponse<>();
     AllowanceEntity allowanceEntity = allowanceRepository.findById(id)
         .orElseThrow(() -> new NotFoundException("Not found allowance id : " + id));
-    AllowanceDto dto = allowanceMapper.toAddDto(allowanceEntity);
-    dto.setUom(iExternalService.getUomById(allowanceEntity.getUomId()));
-    dto.setCurrency(iExternalService.getCurrencyById(allowanceEntity.getCurrencyId()));
+    AllowanceDto dto = allowanceMapper.toDto(allowanceEntity);
     response.setCode(HttpStatus.OK.value());
     response.setMessage("Update Allowance successfully");
     response.setData(dto);
