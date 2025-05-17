@@ -85,8 +85,7 @@ public class AllowancePolicyServiceImpl implements IAllowancePolicyService {
   }
 
   @Override
-  public BaseResponse<ResponseCommon> createAllowancePolicy(
-      AllowancePolicyDto allowancePolicyDto) {
+  public BaseResponse<ResponseCommon> createAllowancePolicy(AllowancePolicyDto allowancePolicyDto) {
     BaseResponse<ResponseCommon> response = new BaseResponse<>();
     AllowancePolicyEntity entity = savePolicy(allowancePolicyDto);
     Long policyId = entity.getId();

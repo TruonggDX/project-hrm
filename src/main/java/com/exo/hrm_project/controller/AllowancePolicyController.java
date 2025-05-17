@@ -47,7 +47,7 @@ public class AllowancePolicyController {
 
   @PutMapping()
   public ResponseEntity<BaseResponse<ResponseCommon>> updateAllowance(
-      @Valid @RequestBody AllowancePolicyDto allowancePolicyDto) {
+     @RequestBody AllowancePolicyDto allowancePolicyDto) {
     BaseResponse<ResponseCommon> response = iAllowancePolicyService.updateAllowancePolicy(
         allowancePolicyDto);
     return ResponseEntity.ok(response);
