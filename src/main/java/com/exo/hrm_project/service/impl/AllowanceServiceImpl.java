@@ -33,7 +33,6 @@ public class AllowanceServiceImpl implements IAllowanceService {
   private final AllowanceMapper allowanceMapper;
   private final GroupAllowanceRepository groupAllowanceRepository;
   private final GenericIdMapper genericIdMapper;
-  private final IExternalService iExternalService;
 
   @Override
   public BaseResponse<ResponsePage<ListAllowanceDto>> getAll(Pageable pageable, String code,

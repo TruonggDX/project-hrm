@@ -10,7 +10,6 @@ import com.exo.hrm_project.mapper.RewardMapper;
 import com.exo.hrm_project.mapper.common.GenericIdMapper;
 import com.exo.hrm_project.repository.GroupRewardRepository;
 import com.exo.hrm_project.repository.RewardRepository;
-import com.exo.hrm_project.service.IExternalService;
 import com.exo.hrm_project.service.IRewardService;
 import com.exo.hrm_project.specification.GenericSpecification;
 import com.exo.hrm_project.specification.SearchCriteria;
@@ -33,7 +32,6 @@ public class RewardServiceImpl implements IRewardService {
   private final RewardMapper rewardMapper;
   private final GroupRewardRepository groupRewardRepository;
   private final GenericIdMapper genericIdMapper;
-  private final IExternalService iExternalService;
 
   @Override
   public BaseResponse<ResponsePage<ListRewardDto>> getAll(Pageable pageable, String code,
@@ -60,7 +58,7 @@ public class RewardServiceImpl implements IRewardService {
     if (check.isEmpty()) {
       response.setCode(HttpStatus.NOT_FOUND.value());
       response.setMessage(
-          "Not found group allowance id: " + rewardDto.getGroupReward().getId());
+          "Not found group reward id: " + rewardDto.getGroupReward().getId());
       return response;
     }
     RewardEntity rewardEntity = rewardMapper.toEntity(rewardDto);
@@ -112,7 +110,7 @@ public class RewardServiceImpl implements IRewardService {
     }
     rewardRepository.save(rewardEntity);
     response.setCode(HttpStatus.OK.value());
-    response.setMessage("Update Allowance successfully");
+    response.setMessage("Update reward successfully");
     response.setData(genericIdMapper.toResponseCommon(rewardEntity));
     return response;
   }
@@ -122,11 +120,9 @@ public class RewardServiceImpl implements IRewardService {
     BaseResponse<RewardDto> response = new BaseResponse<>();
     RewardEntity rewardEntity = rewardRepository.findById(id)
         .orElseThrow(() -> new NotFoundException("Not found allowance id : " + id));
-    RewardDto dto = rewardMapper.toAddDto(rewardEntity);
-    dto.setUom(iExternalService.getUomById(rewardEntity.getUomId()));
-    dto.setCurrency(iExternalService.getCurrencyById(rewardEntity.getCurrencyId()));
+    RewardDto dto = rewardMapper.toDto(rewardEntity);
     response.setCode(HttpStatus.OK.value());
-    response.setMessage("Update Allowance successfully");
+    response.setMessage("Get reward successfully");
     response.setData(dto);
     return response;
   }
@@ -134,7 +130,7 @@ public class RewardServiceImpl implements IRewardService {
   @Override
   public void deleteReward(Long id) {
     RewardEntity rewardEntity = rewardRepository.findById(id)
-        .orElseThrow(() -> new NotFoundException("Not found allowance id : " + id));
+        .orElseThrow(() -> new NotFoundException("Not found reward id : " + id));
     rewardRepository.delete(rewardEntity);
   }
 }
