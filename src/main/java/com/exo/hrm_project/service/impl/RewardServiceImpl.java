@@ -52,14 +52,11 @@ public class RewardServiceImpl implements IRewardService {
 
   @Override
   public BaseResponse<ResponseCommon> createReward(RewardDto rewardDto) {
-    BaseResponse<ResponseCommon> response = new BaseResponse<>();
     Optional<GroupRewardEntity> check = groupRewardRepository.findById(
         rewardDto.getGroupReward().getId());
     if (check.isEmpty()) {
-      response.setCode(HttpStatus.NOT_FOUND.value());
-      response.setMessage(
+      return BaseResponse.notFound(
           "Not found group reward id: " + rewardDto.getGroupReward().getId());
-      return response;
     }
     RewardEntity rewardEntity = rewardMapper.toEntity(rewardDto);
     if (rewardDto.getGroupReward() != null
@@ -73,28 +70,21 @@ public class RewardServiceImpl implements IRewardService {
       rewardEntity.setCurrencyId(rewardDto.getCurrency().getId());
     }
     rewardRepository.save(rewardEntity);
-    response.setCode(HttpStatus.CREATED.value());
-    response.setMessage("Create reward successfully");
-    response.setData(genericIdMapper.toResponseCommon(rewardEntity));
-    return response;
+    return BaseResponse.success(genericIdMapper.toResponseCommon(rewardEntity),
+        "Create reward successfully");
   }
 
   @Override
   public BaseResponse<ResponseCommon> updateReward(RewardDto rewardDto) {
-    BaseResponse<ResponseCommon> response = new BaseResponse<>();
     Optional<RewardEntity> checkRewardId = rewardRepository.findById(rewardDto.getId());
     if (checkRewardId.isEmpty()) {
-      response.setCode(HttpStatus.NOT_FOUND.value());
-      response.setMessage("Not found reward id: " + rewardDto.getId());
-      return response;
+      return BaseResponse.notFound("Not found reward id: " + rewardDto.getId());
     }
     Optional<GroupRewardEntity> check = groupRewardRepository.findById(
         rewardDto.getGroupReward().getId());
     if (check.isEmpty()) {
-      response.setCode(HttpStatus.NOT_FOUND.value());
-      response.setMessage(
+      return BaseResponse.notFound(
           "Not found group reward id: " + rewardDto.getGroupReward().getId());
-      return response;
     }
     RewardEntity rewardEntity = checkRewardId.get();
     rewardMapper.updateDto(rewardDto, rewardEntity);
@@ -109,22 +99,16 @@ public class RewardServiceImpl implements IRewardService {
       rewardEntity.setCurrencyId(rewardDto.getCurrency().getId());
     }
     rewardRepository.save(rewardEntity);
-    response.setCode(HttpStatus.OK.value());
-    response.setMessage("Update reward successfully");
-    response.setData(genericIdMapper.toResponseCommon(rewardEntity));
-    return response;
+    return BaseResponse.success(genericIdMapper.toResponseCommon(rewardEntity),
+        "Update reward successfully");
   }
 
   @Override
   public BaseResponse<RewardDto> getRewardById(Long id) {
-    BaseResponse<RewardDto> response = new BaseResponse<>();
     RewardEntity rewardEntity = rewardRepository.findById(id)
         .orElseThrow(() -> new NotFoundException("Not found allowance id : " + id));
     RewardDto dto = rewardMapper.toDto(rewardEntity);
-    response.setCode(HttpStatus.OK.value());
-    response.setMessage("Get reward successfully");
-    response.setData(dto);
-    return response;
+    return BaseResponse.success(dto, "Get reward successfully");
   }
 
   @Override

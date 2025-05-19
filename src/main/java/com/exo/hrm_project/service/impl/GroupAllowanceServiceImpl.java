@@ -19,7 +19,6 @@ import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -31,7 +30,8 @@ public class GroupAllowanceServiceImpl implements IGroupAllowanceService {
   private final GenericIdMapper genericIdMapper;
 
   @Override
-  public BaseResponse<ResponsePage<ListGroupAllowanceDto>> getAllGroupAllowance(Pageable pageable, String code, String name, Boolean isActive) {
+  public BaseResponse<ResponsePage<ListGroupAllowanceDto>> getAllGroupAllowance(Pageable pageable,
+      String code, String name, Boolean isActive) {
     GenericSpecification<GroupAllowanceEntity> spec = new GenericSpecification<>();
     if (code != null && !code.isEmpty()) {
       spec.add(new SearchCriteria("code", ":", code));
@@ -51,26 +51,21 @@ public class GroupAllowanceServiceImpl implements IGroupAllowanceService {
 
   @Override
   public BaseResponse<ResponseCommon> createGroupAllowance(GroupAllowanceDto groupAllowanceDto) {
-    BaseResponse<ResponseCommon> response = new BaseResponse<>();
     GroupAllowanceEntity groupAllowanceEntity = mapper.toEntity(groupAllowanceDto);
     if (groupAllowanceDto.getParent() != null && groupAllowanceDto.getParent().getId() != null) {
       groupAllowanceEntity.setParentId(groupAllowanceDto.getParent().getId());
     }
     groupAllowanceEntity = repo.save(groupAllowanceEntity);
-    response.setData(genericIdMapper.toResponseCommon(groupAllowanceEntity));
-    response.setCode(HttpStatus.OK.value());
-    response.setMessage("Created GroupAllowance Successfully");
-    return response;
+    return BaseResponse.success(genericIdMapper.toResponseCommon(groupAllowanceEntity),
+        "Created GroupAllowance Successfully");
   }
 
   @Override
   public BaseResponse<ResponseCommon> updateGroupAllowance(GroupAllowanceDto groupAllowanceDto) {
-    BaseResponse<ResponseCommon> response = new BaseResponse<>();
     Optional<GroupAllowanceEntity> groupAllowanceEntity = repo.findById(groupAllowanceDto.getId());
     if (groupAllowanceEntity.isEmpty()) {
-      response.setCode(HttpStatus.NOT_FOUND.value());
-      response.setMessage("Not Found id of groupAllowanceId : " + groupAllowanceDto.getId());
-      return response;
+      return BaseResponse.notFound(
+          "Not Found id of groupAllowanceId : " + groupAllowanceDto.getId());
     }
     GroupAllowanceEntity groupAllowance = groupAllowanceEntity.get();
     if (groupAllowanceDto.getParent() != null && groupAllowanceDto.getParent().getId() != null) {
@@ -78,25 +73,17 @@ public class GroupAllowanceServiceImpl implements IGroupAllowanceService {
     }
     mapper.updateGroupAllowance(groupAllowanceDto, groupAllowance);
     groupAllowance = repo.save(groupAllowance);
-    response.setData(genericIdMapper.toResponseCommon(groupAllowance));
-    response.setCode(HttpStatus.OK.value());
-    response.setMessage("Updated GroupAllowance Successfully");
-    return response;
+    return BaseResponse.success(genericIdMapper.toResponseCommon(groupAllowance),
+        "Updated GroupAllowance Successfully");
   }
 
   @Override
   public BaseResponse<GroupAllowanceDto> getGroupAllowance(Long id) {
-    BaseResponse<GroupAllowanceDto> response = new BaseResponse<>();
     Optional<GroupAllowanceEntity> check = repo.findById(id);
     if (check.isEmpty()) {
-      response.setCode(HttpStatus.NOT_FOUND.value());
-      response.setMessage("Not Found group allowace id : " + id);
-      return response;
+      return BaseResponse.notFound("Not Found group allowace id : " + id);
     }
-    response.setData(mapper.toDto(check.get()));
-    response.setCode(HttpStatus.OK.value());
-    response.setMessage("Get GroupAllowance Successfully");
-    return response;
+    return BaseResponse.success(mapper.toDto(check.get()), "Get GroupAllowance Successfully");
   }
 
   @Override

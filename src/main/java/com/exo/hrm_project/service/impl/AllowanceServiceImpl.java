@@ -11,7 +11,6 @@ import com.exo.hrm_project.mapper.common.GenericIdMapper;
 import com.exo.hrm_project.repository.AllowanceRepository;
 import com.exo.hrm_project.repository.GroupAllowanceRepository;
 import com.exo.hrm_project.service.IAllowanceService;
-import com.exo.hrm_project.service.IExternalService;
 import com.exo.hrm_project.specification.GenericSpecification;
 import com.exo.hrm_project.specification.SearchCriteria;
 import com.exo.hrm_project.utils.response.BaseResponse;
@@ -56,14 +55,11 @@ public class AllowanceServiceImpl implements IAllowanceService {
 
   @Override
   public BaseResponse<ResponseCommon> createAllowance(AllowanceDto allowanceDto) {
-    BaseResponse<ResponseCommon> response = new BaseResponse<>();
     Optional<GroupAllowanceEntity> check = groupAllowanceRepository.findById(
         allowanceDto.getGroupAllowance().getId());
     if (check.isEmpty()) {
-      response.setCode(HttpStatus.NOT_FOUND.value());
-      response.setMessage(
+      return BaseResponse.notFound(
           "Not found group allowance id: " + allowanceDto.getGroupAllowance().getId());
-      return response;
     }
     AllowanceEntity allowanceEntity = allowanceMapper.toEntity(allowanceDto);
     if (allowanceDto.getGroupAllowance() != null
@@ -77,28 +73,21 @@ public class AllowanceServiceImpl implements IAllowanceService {
       allowanceEntity.setCurrencyId(allowanceDto.getCurrency().getId());
     }
     allowanceRepository.save(allowanceEntity);
-    response.setCode(HttpStatus.CREATED.value());
-    response.setMessage("Create Allowance successfully");
-    response.setData(genericIdMapper.toResponseCommon(allowanceEntity));
-    return response;
+    return BaseResponse.success(genericIdMapper.toResponseCommon(allowanceEntity),
+        "Create Allowance successfully");
   }
 
   @Override
   public BaseResponse<ResponseCommon> updateAllowance(AllowanceDto allowanceDto) {
-    BaseResponse<ResponseCommon> response = new BaseResponse<>();
     Optional<AllowanceEntity> checkAllowanceId = allowanceRepository.findById(allowanceDto.getId());
     if (checkAllowanceId.isEmpty()) {
-      response.setCode(HttpStatus.NOT_FOUND.value());
-      response.setMessage("Not found allowance id: " + allowanceDto.getId());
-      return response;
+      return BaseResponse.notFound("Not found allowance id: " + allowanceDto.getId());
     }
     Optional<GroupAllowanceEntity> check = groupAllowanceRepository.findById(
         allowanceDto.getGroupAllowance().getId());
     if (check.isEmpty()) {
-      response.setCode(HttpStatus.NOT_FOUND.value());
-      response.setMessage(
+      return BaseResponse.notFound(
           "Not found group allowance id: " + allowanceDto.getGroupAllowance().getId());
-      return response;
     }
     AllowanceEntity allowanceEntity = checkAllowanceId.get();
     allowanceMapper.updateDto(allowanceDto, allowanceEntity);
@@ -113,22 +102,16 @@ public class AllowanceServiceImpl implements IAllowanceService {
       allowanceEntity.setCurrencyId(allowanceDto.getCurrency().getId());
     }
     allowanceRepository.save(allowanceEntity);
-    response.setCode(HttpStatus.OK.value());
-    response.setMessage("Update Allowance successfully");
-    response.setData(genericIdMapper.toResponseCommon(allowanceEntity));
-    return response;
+    return BaseResponse.success(genericIdMapper.toResponseCommon(allowanceEntity),
+        "Update Allowance successfully");
   }
 
   @Override
   public BaseResponse<AllowanceDto> getAllowanceById(Long id) {
-    BaseResponse<AllowanceDto> response = new BaseResponse<>();
     AllowanceEntity allowanceEntity = allowanceRepository.findById(id)
         .orElseThrow(() -> new NotFoundException("Not found allowance id : " + id));
     AllowanceDto dto = allowanceMapper.toDto(allowanceEntity);
-    response.setCode(HttpStatus.OK.value());
-    response.setMessage("Update Allowance successfully");
-    response.setData(dto);
-    return response;
+    return BaseResponse.success(dto, "Get Allowance successfully");
   }
 
   @Override
