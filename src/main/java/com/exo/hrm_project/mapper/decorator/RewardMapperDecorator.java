@@ -1,6 +1,7 @@
 package com.exo.hrm_project.mapper.decorator;
 
 import com.exo.hrm_project.dto.common.CommonDto;
+import com.exo.hrm_project.dto.detail_payroll.DetailsRewardDto;
 import com.exo.hrm_project.dto.reward.ListRewardDto;
 import com.exo.hrm_project.dto.reward.RewardDto;
 import com.exo.hrm_project.dto.reward_policy.DetailRewardDto;
@@ -63,5 +64,16 @@ public class RewardMapperDecorator implements RewardMapper {
     }
     dto.setUom(iExternalService.getUomById(entity.getUomId()));
     dto.setCurrency(iExternalService.getCurrencyById(entity.getCurrencyId()));
-    return dto;  }
+    return dto;
+  }
+
+  @Override
+  public DetailsRewardDto toDetailsDto(RewardEntity entity) {
+    DetailsRewardDto dto = delegate.toDetailsDto(entity);
+    if (entity.getGroupRewardId() != null) {
+      repo.findById(entity.getGroupRewardId())
+          .ifPresent(parent -> dto.setGroupReward(delegate.toCommonDto(parent)));
+    }
+    return dto;
+  }
 }

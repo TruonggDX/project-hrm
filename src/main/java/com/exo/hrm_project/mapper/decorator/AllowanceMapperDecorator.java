@@ -4,6 +4,7 @@ import com.exo.hrm_project.dto.allowance.AllowanceDto;
 import com.exo.hrm_project.dto.allowance.ListAllowanceDto;
 import com.exo.hrm_project.dto.allowance_policy.DetailAllowanceDto;
 import com.exo.hrm_project.dto.common.CommonDto;
+import com.exo.hrm_project.dto.detail_payroll.DetailsAllowanceDto;
 import com.exo.hrm_project.entity.AllowanceEntity;
 import com.exo.hrm_project.entity.GroupAllowanceEntity;
 import com.exo.hrm_project.mapper.AllowanceMapper;
@@ -71,4 +72,15 @@ public class AllowanceMapperDecorator implements AllowanceMapper {
   public void updateDto(AllowanceDto dto, AllowanceEntity entity) {
     delegate.updateDto(dto, entity);
   }
+
+  @Override
+  public DetailsAllowanceDto toDetailsDto(AllowanceEntity entity) {
+    DetailsAllowanceDto dto = delegate.toDetailsDto(entity);
+    if (entity.getGroupAllowanceId() != null) {
+      repo.findById(entity.getGroupAllowanceId())
+          .ifPresent(parent -> dto.setGroupAllowance(delegate.toCommonDto(parent)));
+    }
+    return dto;
+  }
+
 }

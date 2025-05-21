@@ -16,12 +16,12 @@ import com.exo.hrm_project.specification.SearchCriteria;
 import com.exo.hrm_project.utils.response.BaseResponse;
 import com.exo.hrm_project.utils.response.ResponsePage;
 import com.exo.hrm_project.utils.response.ResponseUtils;
+import jakarta.transaction.Transactional;
 import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 @RequiredArgsConstructor
@@ -59,16 +59,7 @@ public class RewardServiceImpl implements IRewardService {
           "Not found group reward id: " + rewardDto.getGroupReward().getId());
     }
     RewardEntity rewardEntity = rewardMapper.toEntity(rewardDto);
-    if (rewardDto.getGroupReward() != null
-        && rewardDto.getGroupReward().getId() != null) {
-      rewardEntity.setGroupRewardId(rewardDto.getGroupReward().getId());
-    }
-    if (rewardDto.getUom() != null && rewardDto.getUom().getId() != null) {
-      rewardEntity.setUomId(rewardDto.getUom().getId());
-    }
-    if (rewardDto.getCurrency() != null && rewardDto.getCurrency().getId() != null) {
-      rewardEntity.setCurrencyId(rewardDto.getCurrency().getId());
-    }
+    mapRewardDtoToEntity(rewardDto, rewardEntity);
     rewardRepository.save(rewardEntity);
     return BaseResponse.success(genericIdMapper.toResponseCommon(rewardEntity),
         "Create reward successfully");
@@ -88,6 +79,13 @@ public class RewardServiceImpl implements IRewardService {
     }
     RewardEntity rewardEntity = checkRewardId.get();
     rewardMapper.updateDto(rewardDto, rewardEntity);
+    mapRewardDtoToEntity(rewardDto, rewardEntity);
+    rewardRepository.save(rewardEntity);
+    return BaseResponse.success(genericIdMapper.toResponseCommon(rewardEntity),
+        "Update reward successfully");
+  }
+
+  private void mapRewardDtoToEntity(RewardDto rewardDto, RewardEntity rewardEntity) {
     if (rewardDto.getGroupReward() != null
         && rewardDto.getGroupReward().getId() != null) {
       rewardEntity.setGroupRewardId(rewardDto.getGroupReward().getId());
@@ -98,9 +96,6 @@ public class RewardServiceImpl implements IRewardService {
     if (rewardDto.getCurrency() != null && rewardDto.getCurrency().getId() != null) {
       rewardEntity.setCurrencyId(rewardDto.getCurrency().getId());
     }
-    rewardRepository.save(rewardEntity);
-    return BaseResponse.success(genericIdMapper.toResponseCommon(rewardEntity),
-        "Update reward successfully");
   }
 
   @Override
@@ -112,6 +107,7 @@ public class RewardServiceImpl implements IRewardService {
   }
 
   @Override
+  @Transactional
   public void deleteReward(Long id) {
     RewardEntity rewardEntity = rewardRepository.findById(id)
         .orElseThrow(() -> new NotFoundException("Not found reward id : " + id));

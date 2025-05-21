@@ -128,21 +128,36 @@ public class RewardPolicyServiceImpl implements IRewardPolicyService {
         .orElseThrow(() -> new NotFoundException("Policy not found id " + rewardPolicyDto.getId()));
     rewardPolicyMapper.updateRewardPolicy(rewardPolicyDto, entity);
     rewardPolicyRepository.save(entity);
-    List<RewardPolicyApplicableTargetEntity> applicableTargetEntities = applicableTargetRepository.findByRewardPolicyId(
-        rewardPolicyDto.getId());
-    applicableTargetRepository.deleteAll(applicableTargetEntities);
+    updateApplicableTargets(rewardPolicyDto);
+    updateRewardPolicyLines(rewardPolicyDto);
+    return BaseResponse.success(genericIdMapper.toResponseCommon(entity), "Update Reward Policy");
+  }
+
+
+  private void updateApplicableTargets(RewardPolicyDto rewardPolicyDto) {
+    List<RewardPolicyApplicableTargetEntity> oldTargets =
+        applicableTargetRepository.findByRewardPolicyId(rewardPolicyDto.getId());
+    applicableTargetRepository.deleteAll(oldTargets);
     saveTargets(rewardPolicyDto, rewardPolicyDto.getId());
+  }
+
+  private void updateRewardPolicyLines(RewardPolicyDto rewardPolicyDto) {
     List<RewardPolicyLineEntity> lineEntities = rewardPolicyDto.getRewardPolicyLine().stream()
         .map(lineDto -> {
-          RewardPolicyLineEntity lineEntity = rewardPolicyLineRepository.findById(lineDto.getId())
-              .orElseThrow(() -> new NotFoundException("Line not found id " + lineDto.getId()));
-          rewardPolicyLineMapper.updatePolicyLine(lineDto, lineEntity);
+          RewardPolicyLineEntity lineEntity;
+          if (lineDto.getId() != null) {
+            lineEntity = rewardPolicyLineRepository.findById(lineDto.getId())
+                .orElseThrow(() -> new NotFoundException("Line not found id " + lineDto.getId()));
+            rewardPolicyLineMapper.updatePolicyLine(lineDto, lineEntity);
+          } else {
+            lineEntity = rewardPolicyLineMapper.toEntity(lineDto);
+          }
           lineEntity.setRewardPolicyId(rewardPolicyDto.getId());
           return lineEntity;
         }).toList();
     rewardPolicyLineRepository.saveAll(lineEntities);
-    return BaseResponse.success(genericIdMapper.toResponseCommon(entity), "Update Reward Policy");
   }
+
 
   @Override
   public BaseResponse<DetailRewardPolicyDto> getRewardPolicy(Long id) {
@@ -162,12 +177,13 @@ public class RewardPolicyServiceImpl implements IRewardPolicyService {
     }).toList();
     rewardPolicyDto.setRewardPolicyLine(lineDtos);
     String type = rewardPolicyDto.getApplicableType();
-    if (type != null && !type.isBlank()) {
+    if (type != null && !type.isBlank() && !type.equalsIgnoreCase("ALL")) {
       List<CommonDto> applicableTargets = fetchApplicableTargets(id, type);
       rewardPolicyDto.setApplicableTarget(applicableTargets);
     }
     return BaseResponse.success(rewardPolicyDto, "Get Reward Policy");
   }
+
 
   private List<CommonDto> fetchApplicableTargets(Long policyId, String applicableType) {
     List<RewardPolicyApplicableTargetEntity> targets =
@@ -179,7 +195,6 @@ public class RewardPolicyServiceImpl implements IRewardPolicyService {
       case "EMPLOYEE" -> iExternalService.getEmployeeInfoByIds(ids);
       case "DEPARTMENT" -> iExternalService.getDepartmentInfoByIds(ids);
       case "POSITION" -> iExternalService.getPositionInfoByIds(ids);
-      case "ALL" -> List.of();
       default -> List.of();
     };
   }
@@ -188,12 +203,11 @@ public class RewardPolicyServiceImpl implements IRewardPolicyService {
   public void deleteRewardPolicy(Long id) {
     RewardPolicyEntity entity = rewardPolicyRepository.findById(id)
         .orElseThrow(() -> new NotFoundException("Not found reward policy id :" + id));
-    Long policyId = entity.getId();
     List<RewardPolicyLineEntity> lineEntities = rewardPolicyLineRepository.findByRewardPolicyId(
-        policyId);
+        id);
     rewardPolicyLineRepository.deleteAll(lineEntities);
     List<RewardPolicyApplicableTargetEntity> targetEntities = applicableTargetRepository.findByRewardPolicyId(
-        policyId);
+        id);
     applicableTargetRepository.deleteAll(targetEntities);
     rewardPolicyRepository.delete(entity);
   }

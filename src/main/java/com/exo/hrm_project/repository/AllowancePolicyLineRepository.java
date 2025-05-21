@@ -13,4 +13,6 @@ public interface AllowancePolicyLineRepository extends
   @Query("SELECT a FROM AllowancePolicyLineEntity a WHERE a.allowancePolicyId=:policyId")
   List<AllowancePolicyLineEntity> findByAllowancePolicyId(Long policyId);
 
+  @Query("SELECT a FROM AllowancePolicyLineEntity a WHERE a.allowanceId=:allowanceId")
+  AllowancePolicyLineEntity findByAllowanceId(Long allowanceId);
 }

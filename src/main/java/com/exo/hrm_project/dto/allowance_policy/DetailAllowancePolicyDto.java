@@ -4,7 +4,6 @@ import com.exo.hrm_project.dto.common.CommonDto;
 import java.time.LocalDate;
 import java.util.List;
 import lombok.Data;
-import org.springframework.format.annotation.DateTimeFormat;
 
 @Data
 public class DetailAllowancePolicyDto {
@@ -14,9 +13,7 @@ public class DetailAllowancePolicyDto {
   private String name;
   private String description;
   private String type;
-  @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
   private LocalDate startDate;
-  @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
   private LocalDate endDate;
   private String state;
   private String applicableType;

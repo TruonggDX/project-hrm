@@ -1,11 +1,10 @@
 package com.exo.hrm_project.mapper;
 
-import com.exo.hrm_project.dto.allowance_policy.DetailAllowanceDto;
 import com.exo.hrm_project.dto.common.CommonDto;
+import com.exo.hrm_project.dto.detail_payroll.DetailsRewardDto;
 import com.exo.hrm_project.dto.reward.ListRewardDto;
 import com.exo.hrm_project.dto.reward.RewardDto;
 import com.exo.hrm_project.dto.reward_policy.DetailRewardDto;
-import com.exo.hrm_project.entity.AllowanceEntity;
 import com.exo.hrm_project.entity.GroupRewardEntity;
 import com.exo.hrm_project.entity.RewardEntity;
 import com.exo.hrm_project.utils.enums.DeductionType;
@@ -35,6 +34,9 @@ public interface RewardMapper {
 
   @Mapping(target = "includeType", source = "includeType", qualifiedByName = "splitIncludeType")
   DetailRewardDto toDetailDto(RewardEntity entity);
+
+  @Mapping(target = "includeType", source = "includeType", qualifiedByName = "splitIncludeType")
+  DetailsRewardDto toDetailsDto(RewardEntity entity);
 
   @Named("splitIncludeType")
   default List<DeductionType> splitIncludeType(String includeType) {

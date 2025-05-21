@@ -1,21 +1,16 @@
-package com.exo.hrm_project.dto.reward;
+package com.exo.hrm_project.dto.detail_payroll;
 
 import com.exo.hrm_project.dto.common.CommonDto;
-import com.exo.hrm_project.utils.enums.AllowanceRewardType;
 import com.exo.hrm_project.utils.enums.DeductionType;
 import java.util.List;
 import lombok.Data;
 
 @Data
-public class RewardDto {
+public class DetailsRewardDto {
 
   private Long id;
   private String code;
   private String name;
   private CommonDto groupReward;
-  private AllowanceRewardType type;
   private List<DeductionType> includeType;
-  private CommonDto uom;
-  private CommonDto currency;
-  private String description;
 }

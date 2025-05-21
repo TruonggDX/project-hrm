@@ -62,16 +62,7 @@ public class AllowanceServiceImpl implements IAllowanceService {
           "Not found group allowance id: " + allowanceDto.getGroupAllowance().getId());
     }
     AllowanceEntity allowanceEntity = allowanceMapper.toEntity(allowanceDto);
-    if (allowanceDto.getGroupAllowance() != null
-        && allowanceDto.getGroupAllowance().getId() != null) {
-      allowanceEntity.setGroupAllowanceId(allowanceDto.getGroupAllowance().getId());
-    }
-    if (allowanceDto.getUom() != null && allowanceDto.getUom().getId() != null) {
-      allowanceEntity.setUomId(allowanceDto.getUom().getId());
-    }
-    if (allowanceDto.getCurrency() != null && allowanceDto.getCurrency().getId() != null) {
-      allowanceEntity.setCurrencyId(allowanceDto.getCurrency().getId());
-    }
+    mapAllowanceDtoToEntity(allowanceDto, allowanceEntity);
     allowanceRepository.save(allowanceEntity);
     return BaseResponse.success(genericIdMapper.toResponseCommon(allowanceEntity),
         "Create Allowance successfully");
@@ -91,19 +82,22 @@ public class AllowanceServiceImpl implements IAllowanceService {
     }
     AllowanceEntity allowanceEntity = checkAllowanceId.get();
     allowanceMapper.updateDto(allowanceDto, allowanceEntity);
-    if (allowanceDto.getGroupAllowance() != null
-        && allowanceDto.getGroupAllowance().getId() != null) {
-      allowanceEntity.setGroupAllowanceId(allowanceDto.getGroupAllowance().getId());
-    }
-    if (allowanceDto.getUom() != null && allowanceDto.getUom().getId() != null) {
-      allowanceEntity.setUomId(allowanceDto.getUom().getId());
-    }
-    if (allowanceDto.getCurrency() != null && allowanceDto.getCurrency().getId() != null) {
-      allowanceEntity.setCurrencyId(allowanceDto.getCurrency().getId());
-    }
+    mapAllowanceDtoToEntity(allowanceDto, allowanceEntity);
     allowanceRepository.save(allowanceEntity);
     return BaseResponse.success(genericIdMapper.toResponseCommon(allowanceEntity),
         "Update Allowance successfully");
+  }
+
+  private void mapAllowanceDtoToEntity(AllowanceDto dto, AllowanceEntity entity) {
+    if (dto.getGroupAllowance() != null && dto.getGroupAllowance().getId() != null) {
+      entity.setGroupAllowanceId(dto.getGroupAllowance().getId());
+    }
+    if (dto.getUom() != null && dto.getUom().getId() != null) {
+      entity.setUomId(dto.getUom().getId());
+    }
+    if (dto.getCurrency() != null && dto.getCurrency().getId() != null) {
+      entity.setCurrencyId(dto.getCurrency().getId());
+    }
   }
 
   @Override

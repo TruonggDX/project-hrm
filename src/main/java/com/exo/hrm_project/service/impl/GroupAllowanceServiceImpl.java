@@ -79,11 +79,10 @@ public class GroupAllowanceServiceImpl implements IGroupAllowanceService {
 
   @Override
   public BaseResponse<GroupAllowanceDto> getGroupAllowance(Long id) {
-    Optional<GroupAllowanceEntity> check = repo.findById(id);
-    if (check.isEmpty()) {
-      return BaseResponse.notFound("Not Found group allowace id : " + id);
-    }
-    return BaseResponse.success(mapper.toDto(check.get()), "Get GroupAllowance Successfully");
+    GroupAllowanceEntity groupAllowanceEntity = repo.findById(id)
+        .orElseThrow(() -> new NotFoundException("Not Found group allowance id : " + id));
+    return BaseResponse.success(mapper.toDto(groupAllowanceEntity),
+        "Get GroupAllowance Successfully");
   }
 
   @Override
