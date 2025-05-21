@@ -10,16 +10,13 @@ import com.exo.hrm_project.mapper.common.GenericIdMapper;
 import com.exo.hrm_project.repository.GroupRewardRepository;
 import com.exo.hrm_project.service.IGroupRewardService;
 import com.exo.hrm_project.specification.GenericSpecification;
-import com.exo.hrm_project.specification.SearchCriteria;
+import com.exo.hrm_project.specification.filter.FilterGroupReward;
 import com.exo.hrm_project.utils.response.BaseResponse;
 import com.exo.hrm_project.utils.response.ResponsePage;
 import com.exo.hrm_project.utils.response.ResponseUtils;
-import java.util.List;
-import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -33,25 +30,16 @@ public class GroupRewardServiceImpl implements IGroupRewardService {
   @Override
   public BaseResponse<ResponsePage<ListGroupRewardDto>> getAllGroupReward(Pageable pageable,
       String code, String name) {
-    GenericSpecification<GroupRewardEntity> spec = new GenericSpecification<>();
-    if (code != null && !code.isEmpty()) {
-      spec.add(new SearchCriteria("code", ":", code));
-    }
-    if (name != null && !name.isEmpty()) {
-      spec.add(new SearchCriteria("name", ":", name));
-    }
+    GenericSpecification<GroupRewardEntity> spec = FilterGroupReward.build(code, name);
     Page<GroupRewardEntity> page = repo.findAll(spec, pageable);
-    List<ListGroupRewardDto> dtos = page.getContent().stream().map(groupRewardMapper::toDtoList)
-        .toList();
-    return ResponseUtils.toPageResponse(page, dtos, "Get All Group Reward");
+    return ResponseUtils.toPageResponse(page,
+        page.getContent().stream().map(groupRewardMapper::toDtoList)
+            .toList(), "Get All Group Reward");
   }
 
   @Override
   public BaseResponse<ResponseCommon> createGroupReward(GroupRewardDto groupRewardDto) {
     GroupRewardEntity groupRewardEntity = groupRewardMapper.toEntity(groupRewardDto);
-    if (groupRewardDto.getParent() != null && groupRewardDto.getParent().getId() != null) {
-      groupRewardEntity.setParentId(groupRewardDto.getParent().getId());
-    }
     repo.save(groupRewardEntity);
     return BaseResponse.success(genericIdMapper.toResponseCommon(groupRewardEntity),
         "Create GroupReward Successfully");
@@ -59,14 +47,7 @@ public class GroupRewardServiceImpl implements IGroupRewardService {
 
   @Override
   public BaseResponse<ResponseCommon> updateGroupReward(GroupRewardDto groupRewardDto) {
-    Optional<GroupRewardEntity> check = repo.findById(groupRewardDto.getId());
-    if (check.isEmpty()) {
-      return BaseResponse.notFound("Not Found id : " + groupRewardDto.getId());
-    }
-    GroupRewardEntity groupRewardEntity = check.get();
-    if (groupRewardDto.getParent() != null && groupRewardDto.getParent().getId() != null) {
-      groupRewardEntity.setParentId(groupRewardDto.getParent().getId());
-    }
+    GroupRewardEntity groupRewardEntity = getGroupRewardById(groupRewardDto.getId());
     groupRewardMapper.updateGroupReward(groupRewardDto, groupRewardEntity);
     repo.save(groupRewardEntity);
     return BaseResponse.success(genericIdMapper.toResponseCommon(groupRewardEntity),
@@ -75,21 +56,28 @@ public class GroupRewardServiceImpl implements IGroupRewardService {
 
   @Override
   public BaseResponse<GroupRewardDto> getGroupReward(Long id) {
-    BaseResponse<GroupRewardDto> response = new BaseResponse<>();
-    Optional<GroupRewardEntity> check = repo.findById(id);
-    if (check.isEmpty()) {
-      response.setCode(HttpStatus.NOT_FOUND.value());
-      response.setMessage("Not Found id : " + id);
-      return response;
-    }
-    return BaseResponse.success(groupRewardMapper.toDto(check.get()),
+    GroupRewardEntity groupRewardEntity = getGroupRewardById(id);
+    GroupRewardDto dto = groupRewardMapper.toDto(groupRewardEntity);
+    getParent(groupRewardEntity, dto);
+    return BaseResponse.success(groupRewardMapper.toDto(groupRewardEntity),
         "Get GroupReward By Id Successfully");
   }
 
   @Override
   public void deleteGroupReward(Long id) {
-    GroupRewardEntity groupRewardEntity = repo.findById(id)
-        .orElseThrow(() -> new NotFoundException("Not found group reward id : " + id));
+    GroupRewardEntity groupRewardEntity = getGroupRewardById(id);
     repo.delete(groupRewardEntity);
+  }
+
+  private GroupRewardEntity getGroupRewardById(Long id) {
+    return repo.findById(id)
+        .orElseThrow(() -> new NotFoundException("Not found group reward id : " + id));
+  }
+
+  private void getParent(GroupRewardEntity entity, GroupRewardDto dto) {
+    if (entity.getParentId() != null) {
+      repo.findById(entity.getParentId())
+          .ifPresent(parent -> dto.setParent(groupRewardMapper.toCommonDto(parent)));
+    }
   }
 }

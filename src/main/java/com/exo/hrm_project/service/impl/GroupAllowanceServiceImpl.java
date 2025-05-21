@@ -10,12 +10,10 @@ import com.exo.hrm_project.mapper.common.GenericIdMapper;
 import com.exo.hrm_project.repository.GroupAllowanceRepository;
 import com.exo.hrm_project.service.IGroupAllowanceService;
 import com.exo.hrm_project.specification.GenericSpecification;
-import com.exo.hrm_project.specification.SearchCriteria;
+import com.exo.hrm_project.specification.filter.FilterGroupAllowance;
 import com.exo.hrm_project.utils.response.BaseResponse;
 import com.exo.hrm_project.utils.response.ResponsePage;
 import com.exo.hrm_project.utils.response.ResponseUtils;
-import java.util.List;
-import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -32,29 +30,17 @@ public class GroupAllowanceServiceImpl implements IGroupAllowanceService {
   @Override
   public BaseResponse<ResponsePage<ListGroupAllowanceDto>> getAllGroupAllowance(Pageable pageable,
       String code, String name, Boolean isActive) {
-    GenericSpecification<GroupAllowanceEntity> spec = new GenericSpecification<>();
-    if (code != null && !code.isEmpty()) {
-      spec.add(new SearchCriteria("code", ":", code));
-    }
-    if (name != null && !name.isEmpty()) {
-      spec.add(new SearchCriteria("name", ":", name));
-    }
-    if (isActive != null) {
-      spec.add(new SearchCriteria("isActive", "=", isActive));
-    }
-
+    GenericSpecification<GroupAllowanceEntity> spec = FilterGroupAllowance.build(code, name,
+        isActive);
     Page<GroupAllowanceEntity> page = repo.findAll(spec, pageable);
-    List<ListGroupAllowanceDto> dtos = page.getContent().stream().map(mapper::toDtoList).toList();
-    return ResponseUtils.toPageResponse(page, dtos, "Get All Group Allowance Policy");
+    return ResponseUtils.toPageResponse(page,
+        page.getContent().stream().map(mapper::toDtoList).toList(),
+        "Get All Group Allowance Policy");
   }
-
 
   @Override
   public BaseResponse<ResponseCommon> createGroupAllowance(GroupAllowanceDto groupAllowanceDto) {
     GroupAllowanceEntity groupAllowanceEntity = mapper.toEntity(groupAllowanceDto);
-    if (groupAllowanceDto.getParent() != null && groupAllowanceDto.getParent().getId() != null) {
-      groupAllowanceEntity.setParentId(groupAllowanceDto.getParent().getId());
-    }
     groupAllowanceEntity = repo.save(groupAllowanceEntity);
     return BaseResponse.success(genericIdMapper.toResponseCommon(groupAllowanceEntity),
         "Created GroupAllowance Successfully");
@@ -62,15 +48,7 @@ public class GroupAllowanceServiceImpl implements IGroupAllowanceService {
 
   @Override
   public BaseResponse<ResponseCommon> updateGroupAllowance(GroupAllowanceDto groupAllowanceDto) {
-    Optional<GroupAllowanceEntity> groupAllowanceEntity = repo.findById(groupAllowanceDto.getId());
-    if (groupAllowanceEntity.isEmpty()) {
-      return BaseResponse.notFound(
-          "Not Found id of groupAllowanceId : " + groupAllowanceDto.getId());
-    }
-    GroupAllowanceEntity groupAllowance = groupAllowanceEntity.get();
-    if (groupAllowanceDto.getParent() != null && groupAllowanceDto.getParent().getId() != null) {
-      groupAllowance.setParentId(groupAllowanceDto.getParent().getId());
-    }
+    GroupAllowanceEntity groupAllowance = getGroupAllowanceById(groupAllowanceDto.getId());
     mapper.updateGroupAllowance(groupAllowanceDto, groupAllowance);
     groupAllowance = repo.save(groupAllowance);
     return BaseResponse.success(genericIdMapper.toResponseCommon(groupAllowance),
@@ -79,10 +57,10 @@ public class GroupAllowanceServiceImpl implements IGroupAllowanceService {
 
   @Override
   public BaseResponse<GroupAllowanceDto> getGroupAllowance(Long id) {
-    GroupAllowanceEntity groupAllowanceEntity = repo.findById(id)
-        .orElseThrow(() -> new NotFoundException("Not Found group allowance id : " + id));
-    return BaseResponse.success(mapper.toDto(groupAllowanceEntity),
-        "Get GroupAllowance Successfully");
+    GroupAllowanceEntity entity = getGroupAllowanceById(id);
+    GroupAllowanceDto dto = mapper.toDto(entity);
+    getParent(entity, dto);
+    return BaseResponse.success(dto, "Get GroupAllowance Successfully");
   }
 
   @Override
@@ -91,5 +69,18 @@ public class GroupAllowanceServiceImpl implements IGroupAllowanceService {
         .orElseThrow(() -> new NotFoundException("Not Found group allowance id : " + id));
     repo.delete(groupAllowanceEntity);
   }
+
+  private GroupAllowanceEntity getGroupAllowanceById(Long id) {
+    return repo.findById(id)
+        .orElseThrow(() -> new NotFoundException("Not Found group allowance id : " + id));
+  }
+
+  private void getParent(GroupAllowanceEntity entity, GroupAllowanceDto dto) {
+    if (entity.getParentId() != null) {
+      repo.findById(entity.getParentId())
+          .ifPresent(parent -> dto.setParent(mapper.toCommonDto(parent)));
+    }
+  }
+
 
 }
