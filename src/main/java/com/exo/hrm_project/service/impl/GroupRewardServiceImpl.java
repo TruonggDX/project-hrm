@@ -15,6 +15,8 @@ import com.exo.hrm_project.utils.response.BaseResponse;
 import com.exo.hrm_project.utils.response.ResponsePage;
 import com.exo.hrm_project.utils.response.ResponseUtils;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -23,6 +25,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class GroupRewardServiceImpl implements IGroupRewardService {
 
+  private static final Logger log = LoggerFactory.getLogger(GroupRewardServiceImpl.class);
   private final GroupRewardRepository repo;
   private final GroupRewardMapper groupRewardMapper;
   private final GenericIdMapper genericIdMapper;
@@ -59,7 +62,7 @@ public class GroupRewardServiceImpl implements IGroupRewardService {
     GroupRewardEntity groupRewardEntity = getGroupRewardById(id);
     GroupRewardDto dto = groupRewardMapper.toDto(groupRewardEntity);
     getParent(groupRewardEntity, dto);
-    return BaseResponse.success(groupRewardMapper.toDto(groupRewardEntity),
+    return BaseResponse.success(dto,
         "Get GroupReward By Id Successfully");
   }
 

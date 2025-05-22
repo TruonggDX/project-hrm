@@ -4,6 +4,7 @@ import com.exo.hrm_project.dto.allowance.AllowanceDto;
 import com.exo.hrm_project.dto.allowance_policy.AllowancePolicyDto;
 import com.exo.hrm_project.dto.allowance_policy.DetailAllowancePolicyDto;
 import com.exo.hrm_project.dto.allowance_policy.ListAllowancePolicyDto;
+import com.exo.hrm_project.dto.common.FilterRequest;
 import com.exo.hrm_project.dto.response.ResponseCommon;
 import com.exo.hrm_project.service.IAllowancePolicyService;
 import com.exo.hrm_project.utils.response.BaseResponse;
@@ -31,7 +32,7 @@ public class AllowancePolicyController {
 
   @GetMapping("/list")
   public ResponseEntity<BaseResponse<ResponsePage<ListAllowancePolicyDto>>> getAllowancePolicyList(
-      Pageable pageable, @ParameterObject ListAllowancePolicyDto filter) {
+      Pageable pageable, @ParameterObject FilterRequest filter) {
     BaseResponse<ResponsePage<ListAllowancePolicyDto>> response = iAllowancePolicyService.getAll(
         pageable, filter);
     return ResponseEntity.ok(response);

@@ -3,6 +3,7 @@ package com.exo.hrm_project.controller;
 import com.exo.hrm_project.dto.allowance_policy.AllowancePolicyDto;
 import com.exo.hrm_project.dto.allowance_policy.DetailAllowancePolicyDto;
 import com.exo.hrm_project.dto.allowance_policy.ListAllowancePolicyDto;
+import com.exo.hrm_project.dto.common.FilterRequest;
 import com.exo.hrm_project.dto.response.ResponseCommon;
 import com.exo.hrm_project.dto.reward_policy.DetailRewardPolicyDto;
 import com.exo.hrm_project.dto.reward_policy.ListRewardPolicyDto;
@@ -33,7 +34,7 @@ public class RewardPolicyController {
 
   @GetMapping("/list")
   public ResponseEntity<BaseResponse<ResponsePage<ListRewardPolicyDto>>> getRewardPolicyList(
-      Pageable pageable, @ParameterObject ListRewardPolicyDto filter) {
+      Pageable pageable, @ParameterObject FilterRequest filter) {
     BaseResponse<ResponsePage<ListRewardPolicyDto>> response = iRewardPolicyService.getAll(
         pageable, filter);
     return ResponseEntity.ok(response);
@@ -41,7 +42,7 @@ public class RewardPolicyController {
 
   @PostMapping
   public ResponseEntity<BaseResponse<ResponseCommon>> addAllowancePolicy(
-      @RequestBody RewardPolicyDto rewardPolicyDto) {
+      @RequestBody DetailRewardPolicyDto rewardPolicyDto) {
     BaseResponse<ResponseCommon> response = iRewardPolicyService.createRewardPolicy(
         rewardPolicyDto);
     return ResponseEntity.ok(response);
@@ -49,7 +50,7 @@ public class RewardPolicyController {
 
   @PutMapping()
   public ResponseEntity<BaseResponse<ResponseCommon>> updateAllowance(
-      @RequestBody RewardPolicyDto rewardPolicyDto) {
+      @RequestBody DetailRewardPolicyDto rewardPolicyDto) {
     BaseResponse<ResponseCommon> response = iRewardPolicyService.updateRewardPolicy(
         rewardPolicyDto);
     return ResponseEntity.ok(response);

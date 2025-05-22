@@ -11,7 +11,7 @@ public class DetailRewardDto {
   private Long id;
   private String code;
   private String name;
-  private List<DeductionType> includeTypes;
+  private List<DeductionType> includeType;
   private CommonDto groupReward;
   private CommonDto uom;
   private CommonDto currency;
