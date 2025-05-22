@@ -12,7 +12,7 @@ import lombok.Data;
 
 @Entity
 @Data
-@Table(name = "allowance-policy")
+@Table(name = "allowance_policy")
 public class AllowancePolicyEntity extends BaseEntity {
 
   private String code;

@@ -1,5 +1,6 @@
 package com.exo.hrm_project.service.impl;
 
+import com.exo.hrm_project.dto.allowance_policy.DetailAllowanceDto;
 import com.exo.hrm_project.dto.allowance_policy.DetailAllowancePolicyDto;
 import com.exo.hrm_project.dto.allowance_policy.DetailAllowancePolicyLineDto;
 import com.exo.hrm_project.dto.allowance_policy.ListAllowancePolicyDto;
@@ -19,14 +20,23 @@ import com.exo.hrm_project.repository.AllowancePolicyApplicableTargetRepository;
 import com.exo.hrm_project.repository.AllowancePolicyLineRepository;
 import com.exo.hrm_project.repository.AllowancePolicyRepository;
 import com.exo.hrm_project.repository.AllowanceRepository;
+import com.exo.hrm_project.repository.GroupAllowanceRepository;
 import com.exo.hrm_project.service.IAllowancePolicyService;
 import com.exo.hrm_project.service.IExternalService;
 import com.exo.hrm_project.specification.GenericSpecification;
 import com.exo.hrm_project.specification.filter.FilterPolicy;
+import com.exo.hrm_project.utils.enums.ApplicableObject;
 import com.exo.hrm_project.utils.response.BaseResponse;
 import com.exo.hrm_project.utils.response.ResponsePage;
 import com.exo.hrm_project.utils.response.ResponseUtils;
+import jakarta.transaction.Transactional;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -45,6 +55,7 @@ public class AllowancePolicyServiceImpl implements IAllowancePolicyService {
   private final AllowanceRepository allowanceRepository;
   private final AllowanceMapper allowanceMapper;
   private final IExternalService iExternalService;
+  private final GroupAllowanceRepository groupAllowanceRepository;
 
   @Override
   public BaseResponse<ResponsePage<ListAllowancePolicyDto>> getAll(Pageable pageable,
@@ -57,43 +68,17 @@ public class AllowancePolicyServiceImpl implements IAllowancePolicyService {
         .toList(), "Get All Allowance Policy");
   }
 
+  @Transactional
   @Override
   public BaseResponse<ResponseCommon> createAllowancePolicy(
       DetailAllowancePolicyDto allowancePolicyDto) {
     AllowancePolicyEntity entity = allowancePolicyMapper.toEntity(allowancePolicyDto);
     policyRepository.save(entity);
     Long policyId = entity.getId();
-    createTargets(allowancePolicyDto, policyId);
-    createPolicyLines(allowancePolicyDto, policyId);
+    createOrUpdateApplicableTargets(policyId, allowancePolicyDto.getApplicableTargets());
+    createOrUpdatePolicyLines(policyId, allowancePolicyDto.getAllowancePolicyLines());
     return BaseResponse.success(genericIdMapper.toResponseCommon(entity),
         "Create Allowance Policy");
-  }
-
-  private void createTargets(DetailAllowancePolicyDto dto, Long policyId) {
-    if (dto.getApplicableTargets() == null || dto.getApplicableTargets().isEmpty()) {
-      return;
-    }
-    List<AllowancePolicyApplicableTargetEntity> targets = dto.getApplicableTargets().stream()
-        .map(t -> {
-          AllowancePolicyApplicableTargetEntity entity = new AllowancePolicyApplicableTargetEntity();
-          entity.setAllowancePolicyId(policyId);
-          entity.setTargetId(t.getId());
-          return entity;
-        }).toList();
-    applicableTargetRepository.saveAll(targets);
-  }
-
-  private void createPolicyLines(DetailAllowancePolicyDto dto, Long policyId) {
-    if (dto.getAllowancePolicyLines() == null || dto.getAllowancePolicyLines().isEmpty()) {
-      return;
-    }
-    List<AllowancePolicyLineEntity> lines = dto.getAllowancePolicyLines().stream()
-        .map(lineDto -> {
-          AllowancePolicyLineEntity entity = allowancePolicyLineMapper.toEntity(lineDto);
-          entity.setAllowancePolicyId(policyId);
-          return entity;
-        }).toList();
-    policyLineRepository.saveAll(lines);
   }
 
   @Override
@@ -102,68 +87,117 @@ public class AllowancePolicyServiceImpl implements IAllowancePolicyService {
     AllowancePolicyEntity entity = getAllowancePolicyById(allowancePolicyDto.getId());
     allowancePolicyMapper.updateAllowancePolicy(allowancePolicyDto, entity);
     policyRepository.save(entity);
-    updateApplicableTargets(allowancePolicyDto);
-    updatePolicyLines(allowancePolicyDto);
+    createOrUpdateApplicableTargets(entity.getId(), allowancePolicyDto.getApplicableTargets());
+    createOrUpdatePolicyLines(entity.getId(), allowancePolicyDto.getAllowancePolicyLines());
     return BaseResponse.success(genericIdMapper.toResponseCommon(entity),
         "Update Allowance Policy");
   }
 
-  private void updateApplicableTargets(DetailAllowancePolicyDto dto) {
+  private void createOrUpdateApplicableTargets(Long policyId, List<CommonDto> applicableTargets) {
     List<AllowancePolicyApplicableTargetEntity> existingTargets =
-        applicableTargetRepository.findByAllowancePolicyId(dto.getId());
+        applicableTargetRepository.findByAllowancePolicyId(policyId);
     applicableTargetRepository.deleteAll(existingTargets);
-    createTargets(dto, dto.getId());
-  }
 
-  private void updatePolicyLines(DetailAllowancePolicyDto dto) {
-    List<AllowancePolicyLineEntity> lineEntities = dto.getAllowancePolicyLines().stream()
-        .map(lineDto -> {
-          AllowancePolicyLineEntity lineEntity;
-          if (lineDto.getId() != null) {
-            lineEntity = policyLineRepository.findById(lineDto.getId())
-                .orElseThrow(() -> new NotFoundException("Line not found id " + lineDto.getId()));
-            allowancePolicyLineMapper.updatePolicyLine(lineDto, lineEntity);
-          } else {
-            lineEntity = allowancePolicyLineMapper.toEntity(lineDto);
-          }
-          lineEntity.setAllowancePolicyId(dto.getId());
-          return lineEntity;
+    if (applicableTargets == null || applicableTargets.isEmpty()) {
+      return;
+    }
+    List<AllowancePolicyApplicableTargetEntity> newTargets = applicableTargets.stream()
+        .map(t -> {
+          AllowancePolicyApplicableTargetEntity entity = new AllowancePolicyApplicableTargetEntity();
+          entity.setAllowancePolicyId(policyId);
+          entity.setTargetId(t.getId());
+          return entity;
         }).toList();
-    policyLineRepository.saveAll(lineEntities);
+
+    applicableTargetRepository.saveAll(newTargets);
   }
 
+  private void createOrUpdatePolicyLines(Long policyId,
+      List<DetailAllowancePolicyLineDto> lineDtos) {
+    List<AllowancePolicyLineEntity> existingLines = policyLineRepository.findByAllowancePolicyId(
+        policyId);
+    Map<Long, AllowancePolicyLineEntity> existingLineMap = existingLines.stream()
+        .filter(line -> line.getId() != null)
+        .collect(Collectors.toMap(AllowancePolicyLineEntity::getId, Function.identity()));
+    List<AllowancePolicyLineEntity> linesToSave = new ArrayList<>();
+    for (DetailAllowancePolicyLineDto lineDto : lineDtos) {
+      AllowancePolicyLineEntity lineEntity;
+      if (lineDto.getId() != null && existingLineMap.containsKey(lineDto.getId())) {
+        lineEntity = existingLineMap.get(lineDto.getId());
+        allowancePolicyLineMapper.updatePolicyLine(lineDto, lineEntity);
+        existingLineMap.remove(lineDto.getId());
+      } else {
+        lineEntity = allowancePolicyLineMapper.toEntity(lineDto);
+        lineEntity.setAllowancePolicyId(policyId);
+      }
+      linesToSave.add(lineEntity);
+    }
+    if (!existingLineMap.isEmpty()) {
+      policyLineRepository.deleteAll(existingLineMap.values());
+    }
+    policyLineRepository.saveAll(linesToSave);
+  }
 
   @Override
   public BaseResponse<DetailAllowancePolicyDto> getAllowancePolicy(Long id) {
     AllowancePolicyEntity policyEntity = getAllowancePolicyById(id);
     DetailAllowancePolicyDto allowancePolicyDto = allowancePolicyMapper.toDto(policyEntity);
     List<AllowancePolicyLineEntity> lineEntities = policyLineRepository.findByAllowancePolicyId(id);
-    List<DetailAllowancePolicyLineDto> lineDtos = lineEntities.stream().map(line -> {
-      DetailAllowancePolicyLineDto lineDto = allowancePolicyLineMapper.toDto(line);
-      AllowanceEntity allowance = allowanceRepository.findById(line.getAllowanceId()).orElseThrow(
-          () -> new NotFoundException("Not found allowance id :" + line.getAllowanceId()));
-      lineDto.setAllowance(allowanceMapper.toDetailDto(allowance));
-      return lineDto;
-    }).toList();
+
+    Map<Long, DetailAllowanceDto> allowanceDtoMap = getAllowanceDtoMap(lineEntities);
+    List<DetailAllowancePolicyLineDto> lineDtos = buildAllowancePolicyLineDtos(lineEntities,
+        allowanceDtoMap);
     allowancePolicyDto.setAllowancePolicyLines(lineDtos);
-    String type = allowancePolicyDto.getApplicableType();
-    if (type != null && !type.isBlank() && !type.equalsIgnoreCase("ALL")) {
-      List<CommonDto> applicableTargets = fetchApplicableTargetsByType(id, type);
-      allowancePolicyDto.setApplicableTargets(applicableTargets);
-    }
+    ApplicableObject applicableType = policyEntity.getApplicableType();
+    List<CommonDto> applicableTargets = getApplicableTargets(id, applicableType);
+    allowancePolicyDto.setApplicableTargets(applicableTargets);
     return BaseResponse.success(allowancePolicyDto, "Get Allowance Policy");
   }
 
-  private List<CommonDto> fetchApplicableTargetsByType(Long policyId, String applicableType) {
+  private Map<Long, DetailAllowanceDto> getAllowanceDtoMap(List<AllowancePolicyLineEntity> lines) {
+    Set<Long> allowanceIds = lines.stream().map(AllowancePolicyLineEntity::getAllowanceId)
+        .filter(Objects::nonNull)
+        .collect(Collectors.toSet());
+    List<AllowanceEntity> allowanceEntities = allowanceRepository.findAllById(allowanceIds);
+    return allowanceEntities.stream().map(this::getDataExternal).collect(Collectors.toMap(
+        DetailAllowanceDto::getId,
+        Function.identity()
+    ));
+  }
+
+  private List<DetailAllowancePolicyLineDto> buildAllowancePolicyLineDtos(
+      List<AllowancePolicyLineEntity> lines, Map<Long, DetailAllowanceDto> allowanceDtoMap) {
+    return lines.stream().map(line -> {
+      DetailAllowancePolicyLineDto lineDto = allowancePolicyLineMapper.toDto(line);
+      lineDto.setAllowance(allowanceDtoMap.get(line.getAllowanceId()));
+      return lineDto;
+    }).toList();
+  }
+
+  public DetailAllowanceDto getDataExternal(AllowanceEntity entity) {
+    DetailAllowanceDto dto = allowanceMapper.toDetailDto(entity);
+    if (entity.getGroupAllowanceId() != null) {
+      groupAllowanceRepository.findById(entity.getGroupAllowanceId())
+          .ifPresent(parent -> dto.setGroupAllowance(allowanceMapper.toCommonDto(parent)));
+    }
+    dto.setUom(iExternalService.getUomById(entity.getUomId()));
+    dto.setCurrency(iExternalService.getCurrencyById(entity.getCurrencyId()));
+    return dto;
+  }
+
+  private List<CommonDto> getApplicableTargets(Long policyId, ApplicableObject applicableType) {
+    if (applicableType == null || applicableType == ApplicableObject.All) {
+      return List.of();
+    }
     List<AllowancePolicyApplicableTargetEntity> targets =
         applicableTargetRepository.findByAllowancePolicyId(policyId);
     List<Long> ids = targets.stream()
         .map(AllowancePolicyApplicableTargetEntity::getTargetId)
         .toList();
-    return switch (applicableType.toUpperCase()) {
-      case "EMPLOYEE" -> iExternalService.getEmployeeInfoByIds(ids);
-      case "DEPARTMENT" -> iExternalService.getDepartmentInfoByIds(ids);
-      case "POSITION" -> iExternalService.getPositionInfoByIds(ids);
+    return switch (applicableType) {
+      case EMPLOYEE -> iExternalService.getEmployeeInfoByIds(ids);
+      case DEPARTMENT -> iExternalService.getDepartmentInfoByIds(ids);
+      case POSITION -> iExternalService.getPositionInfoByIds(ids);
       default -> List.of();
     };
   }

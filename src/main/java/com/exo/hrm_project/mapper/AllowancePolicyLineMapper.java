@@ -1,7 +1,6 @@
 package com.exo.hrm_project.mapper;
 
 import com.exo.hrm_project.dto.allowance_policy.AllowancePolicyLineDto;
-import com.exo.hrm_project.dto.allowance_policy.DetailAllowancePolicyDto;
 import com.exo.hrm_project.dto.allowance_policy.DetailAllowancePolicyLineDto;
 import com.exo.hrm_project.entity.AllowancePolicyLineEntity;
 import org.mapstruct.Mapper;

@@ -10,7 +10,6 @@ import lombok.Data;
 @Table(name = "allowance_policy_applicable_target")
 public class AllowancePolicyApplicableTargetEntity extends BaseEntity {
 
-  @Column(name = "allowance_policy_id")
   private Long allowancePolicyId;
   private Long targetId;
 

@@ -16,6 +16,7 @@ import com.exo.hrm_project.mapper.RewardMapper;
 import com.exo.hrm_project.mapper.RewardPolicyLineMapper;
 import com.exo.hrm_project.mapper.RewardPolicyMapper;
 import com.exo.hrm_project.mapper.common.GenericIdMapper;
+import com.exo.hrm_project.repository.GroupRewardRepository;
 import com.exo.hrm_project.repository.RewardPolicyApplicableTargetRepository;
 import com.exo.hrm_project.repository.RewardPolicyLineRepository;
 import com.exo.hrm_project.repository.RewardPolicyRepository;
@@ -24,10 +25,17 @@ import com.exo.hrm_project.service.IExternalService;
 import com.exo.hrm_project.service.IRewardPolicyService;
 import com.exo.hrm_project.specification.GenericSpecification;
 import com.exo.hrm_project.specification.filter.FilterPolicy;
+import com.exo.hrm_project.utils.enums.ApplicableObject;
 import com.exo.hrm_project.utils.response.BaseResponse;
 import com.exo.hrm_project.utils.response.ResponsePage;
 import com.exo.hrm_project.utils.response.ResponseUtils;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -43,6 +51,7 @@ public class RewardPolicyServiceImpl implements IRewardPolicyService {
   private final RewardPolicyLineRepository rewardPolicyLineRepository;
   private final RewardPolicyApplicableTargetRepository applicableTargetRepository;
   private final RewardRepository rewardRepository;
+  private final GroupRewardRepository groupRewardRepository;
   private final RewardMapper rewardMapper;
   private final IExternalService iExternalService;
   private final GenericIdMapper genericIdMapper;
@@ -60,134 +69,148 @@ public class RewardPolicyServiceImpl implements IRewardPolicyService {
 
   @Override
   public BaseResponse<ResponseCommon> createRewardPolicy(DetailRewardPolicyDto rewardPolicyDto) {
-    RewardPolicyEntity entity = savePolicy(rewardPolicyDto);
+    RewardPolicyEntity entity = rewardPolicyMapper.toEntity(rewardPolicyDto);
+    rewardPolicyRepository.save(entity);
     Long policyId = entity.getId();
-    createTargets(rewardPolicyDto, policyId);
-    createPolicyLines(rewardPolicyDto, policyId);
+    createOrUpdateApplicableTargets(policyId, rewardPolicyDto.getApplicableTargets());
+    createOrUpdatePolicyLines(policyId, rewardPolicyDto.getRewardPolicyLines());
     return BaseResponse.success(genericIdMapper.toResponseCommon(entity),
         "Create Reward Policy");
   }
 
-  private RewardPolicyEntity savePolicy(DetailRewardPolicyDto rewardPolicyDto) {
-    RewardPolicyEntity entity = rewardPolicyMapper.toEntity(rewardPolicyDto);
-    return rewardPolicyRepository.save(entity);
+  @Override
+  public BaseResponse<ResponseCommon> updateRewardPolicy(DetailRewardPolicyDto rewardPolicyDto) {
+    RewardPolicyEntity entity = getRewardPolicyEntity(rewardPolicyDto.getId());
+    rewardPolicyMapper.updateRewardPolicy(rewardPolicyDto, entity);
+    rewardPolicyRepository.save(entity);
+    createOrUpdateApplicableTargets(entity.getId(), rewardPolicyDto.getApplicableTargets());
+    createOrUpdatePolicyLines(entity.getId(), rewardPolicyDto.getRewardPolicyLines());
+    return BaseResponse.success(genericIdMapper.toResponseCommon(entity), "Update Reward Policy");
   }
 
-  private void createTargets(DetailRewardPolicyDto dto, Long policyId) {
-    if (dto.getApplicableTargets() == null || dto.getApplicableTargets().isEmpty()) {
+
+  private void createOrUpdateApplicableTargets(Long policyId, List<CommonDto> applicableTargets) {
+    List<RewardPolicyApplicableTargetEntity> existingTargets =
+        applicableTargetRepository.findByRewardPolicyId(policyId);
+    applicableTargetRepository.deleteAll(existingTargets);
+    if (applicableTargets == null || applicableTargets.isEmpty()) {
       return;
     }
-    List<RewardPolicyApplicableTargetEntity> targets = dto.getApplicableTargets().stream()
+    List<RewardPolicyApplicableTargetEntity> newTargets = applicableTargets.stream()
         .map(t -> {
           RewardPolicyApplicableTargetEntity entity = new RewardPolicyApplicableTargetEntity();
           entity.setRewardPolicyId(policyId);
           entity.setTargetId(t.getId());
           return entity;
         }).toList();
-    applicableTargetRepository.saveAll(targets);
+
+    applicableTargetRepository.saveAll(newTargets);
   }
 
-  private void createPolicyLines(DetailRewardPolicyDto dto, Long policyId) {
-    if (dto.getRewardPolicyLines() == null || dto.getRewardPolicyLines().isEmpty()) {
-      return;
+  private void createOrUpdatePolicyLines(Long policyId, List<DetailRewardPolicyLineDto> lineDtos) {
+    List<RewardPolicyLineEntity> existingLines = rewardPolicyLineRepository.findByRewardPolicyId(
+        policyId);
+    Map<Long, RewardPolicyLineEntity> existingLineMap = existingLines.stream()
+        .filter(line -> line.getId() != null)
+        .collect(Collectors.toMap(RewardPolicyLineEntity::getId, Function.identity()));
+    List<RewardPolicyLineEntity> linesToSave = new ArrayList<>();
+    for (DetailRewardPolicyLineDto lineDto : lineDtos) {
+      RewardPolicyLineEntity lineEntity;
+      if (lineDto.getId() != null && existingLineMap.containsKey(lineDto.getId())) {
+        lineEntity = existingLineMap.get(lineDto.getId());
+        rewardPolicyLineMapper.updatePolicyLine(lineDto, lineEntity);
+        existingLineMap.remove(lineDto.getId());
+      } else {
+        lineEntity = rewardPolicyLineMapper.toEntity(lineDto);
+        lineEntity.setRewardPolicyId(policyId);
+      }
+      linesToSave.add(lineEntity);
     }
-    List<RewardPolicyLineEntity> lines = dto.getRewardPolicyLines().stream()
-        .map(lineDto -> {
-          RewardPolicyLineEntity entity = rewardPolicyLineMapper.toEntity(lineDto);
-          entity.setRewardPolicyId(policyId);
-          return entity;
-        }).toList();
-    rewardPolicyLineRepository.saveAll(lines);
+    if (!existingLineMap.isEmpty()) {
+      rewardPolicyLineRepository.deleteAll(existingLineMap.values());
+    }
+    rewardPolicyLineRepository.saveAll(linesToSave);
   }
-
-  @Override
-  public BaseResponse<ResponseCommon> updateRewardPolicy(DetailRewardPolicyDto rewardPolicyDto) {
-    RewardPolicyEntity entity = rewardPolicyRepository.findById(rewardPolicyDto.getId())
-        .orElseThrow(() -> new NotFoundException("Policy not found id " + rewardPolicyDto.getId()));
-    rewardPolicyMapper.updateRewardPolicy(rewardPolicyDto, entity);
-    rewardPolicyRepository.save(entity);
-    updateApplicableTargets(rewardPolicyDto);
-    updateRewardPolicyLines(rewardPolicyDto);
-    return BaseResponse.success(genericIdMapper.toResponseCommon(entity), "Update Reward Policy");
-  }
-
-
-  private void updateApplicableTargets(DetailRewardPolicyDto rewardPolicyDto) {
-    List<RewardPolicyApplicableTargetEntity> oldTargets =
-        applicableTargetRepository.findByRewardPolicyId(rewardPolicyDto.getId());
-    applicableTargetRepository.deleteAll(oldTargets);
-    createTargets(rewardPolicyDto, rewardPolicyDto.getId());
-  }
-
-  private void updateRewardPolicyLines(DetailRewardPolicyDto rewardPolicyDto) {
-    List<RewardPolicyLineEntity> lineEntities = rewardPolicyDto.getRewardPolicyLines().stream()
-        .map(lineDto -> {
-          RewardPolicyLineEntity lineEntity;
-          if (lineDto.getId() != null) {
-            lineEntity = rewardPolicyLineRepository.findById(lineDto.getId())
-                .orElseThrow(() -> new NotFoundException("Line not found id " + lineDto.getId()));
-            rewardPolicyLineMapper.updatePolicyLine(lineDto, lineEntity);
-          } else {
-            lineEntity = rewardPolicyLineMapper.toEntity(lineDto);
-          }
-          lineEntity.setRewardPolicyId(rewardPolicyDto.getId());
-          return lineEntity;
-        }).toList();
-    rewardPolicyLineRepository.saveAll(lineEntities);
-  }
-
 
   @Override
   public BaseResponse<DetailRewardPolicyDto> getRewardPolicy(Long id) {
-    RewardPolicyEntity policyEntity = rewardPolicyRepository.findById(id)
-        .orElseThrow(() -> new NotFoundException("Not found reward policy id :" + id));
+    RewardPolicyEntity policyEntity = getRewardPolicyEntity(id);
     DetailRewardPolicyDto rewardPolicyDto = rewardPolicyMapper.toDto(policyEntity);
     List<RewardPolicyLineEntity> lineEntities = rewardPolicyLineRepository.findByRewardPolicyId(id);
-    List<DetailRewardPolicyLineDto> lineDtos = lineEntities.stream().map(line -> {
-      DetailRewardPolicyLineDto lineDto = rewardPolicyLineMapper.toDto(line);
-      RewardEntity rewardEntity = rewardRepository.findById(line.getRewardId()).orElseThrow(
-          () -> new NotFoundException("Not found reward id :" + line.getRewardId()));
-      if (rewardEntity != null) {
-        DetailRewardDto detailRewardDto = rewardMapper.toDetailDto(rewardEntity);
-        lineDto.setReward(detailRewardDto);
-      }
-      return lineDto;
-    }).toList();
+    Map<Long, DetailRewardDto> rewardDtoMap = getRewardDtoMap(lineEntities);
+    List<DetailRewardPolicyLineDto> lineDtos = buildRewardPolicyLineDtos(lineEntities,
+        rewardDtoMap);
     rewardPolicyDto.setRewardPolicyLines(lineDtos);
-    String type = rewardPolicyDto.getApplicableType();
-    if (type != null && !type.isBlank() && !type.equalsIgnoreCase("ALL")) {
-      List<CommonDto> applicableTargets = fetchApplicableTargets(id, type);
-      rewardPolicyDto.setApplicableTargets(applicableTargets);
-    }
+    ApplicableObject applicableObject = policyEntity.getApplicableType();
+    List<CommonDto> applicableTargets = getApplicableTargets(id, applicableObject);
+    rewardPolicyDto.setApplicableTargets(applicableTargets);
     return BaseResponse.success(rewardPolicyDto, "Get Reward Policy");
   }
 
+  private Map<Long, DetailRewardDto> getRewardDtoMap(List<RewardPolicyLineEntity> lines) {
+    Set<Long> rewardIds = lines.stream().map(RewardPolicyLineEntity::getRewardId)
+        .filter(Objects::nonNull)
+        .collect(Collectors.toSet());
+    List<RewardEntity> rewardEntities = rewardRepository.findAllById(rewardIds);
+    return rewardEntities.stream().map(this::getDataExternal).collect(Collectors.toMap(
+        DetailRewardDto::getId,
+        Function.identity()
+    ));
+  }
 
-  private List<CommonDto> fetchApplicableTargets(Long policyId, String applicableType) {
+  private List<DetailRewardPolicyLineDto> buildRewardPolicyLineDtos(
+      List<RewardPolicyLineEntity> lines,
+      Map<Long, DetailRewardDto> rewardDtoMap) {
+    return lines.stream().map(line -> {
+      DetailRewardPolicyLineDto lineDto = rewardPolicyLineMapper.toDto(line);
+      lineDto.setReward(rewardDtoMap.get(line.getRewardId()));
+      return lineDto;
+    }).toList();
+  }
+
+  private List<CommonDto> getApplicableTargets(Long policyId, ApplicableObject applicableType) {
+    if (applicableType == null || applicableType == ApplicableObject.All) {
+      return List.of();
+    }
     List<RewardPolicyApplicableTargetEntity> targets =
         applicableTargetRepository.findByRewardPolicyId(policyId);
-    List<Long> ids = targets.stream()
+    List<Long> targetIds = targets.stream()
         .map(RewardPolicyApplicableTargetEntity::getTargetId)
         .toList();
-    return switch (applicableType.toUpperCase()) {
-      case "EMPLOYEE" -> iExternalService.getEmployeeInfoByIds(ids);
-      case "DEPARTMENT" -> iExternalService.getDepartmentInfoByIds(ids);
-      case "POSITION" -> iExternalService.getPositionInfoByIds(ids);
+    return switch (applicableType) {
+      case EMPLOYEE -> iExternalService.getEmployeeInfoByIds(targetIds);
+      case DEPARTMENT -> iExternalService.getDepartmentInfoByIds(targetIds);
+      case POSITION -> iExternalService.getPositionInfoByIds(targetIds);
       default -> List.of();
     };
   }
 
+  public DetailRewardDto getDataExternal(RewardEntity entity) {
+    DetailRewardDto dto = rewardMapper.toDetailDto(entity);
+    if (entity.getGroupRewardId() != null) {
+      groupRewardRepository.findById(entity.getGroupRewardId())
+          .ifPresent(parent -> dto.setGroupReward(rewardMapper.toCommonDto(parent)));
+    }
+    dto.setUom(iExternalService.getUomById(entity.getUomId()));
+    dto.setCurrency(iExternalService.getCurrencyById(entity.getCurrencyId()));
+    return dto;
+  }
+
   @Override
   public void deleteRewardPolicy(Long id) {
-    RewardPolicyEntity entity = rewardPolicyRepository.findById(id)
-        .orElseThrow(() -> new NotFoundException("Not found reward policy id :" + id));
-    List<RewardPolicyLineEntity> lineEntities = rewardPolicyLineRepository.findByRewardPolicyId(
-        id);
+    RewardPolicyEntity entity = getRewardPolicyEntity(id);
+    List<RewardPolicyLineEntity> lineEntities = rewardPolicyLineRepository.findByRewardPolicyId(id);
     rewardPolicyLineRepository.deleteAll(lineEntities);
     List<RewardPolicyApplicableTargetEntity> targetEntities = applicableTargetRepository.findByRewardPolicyId(
         id);
     applicableTargetRepository.deleteAll(targetEntities);
     rewardPolicyRepository.delete(entity);
   }
+
+  private RewardPolicyEntity getRewardPolicyEntity(Long id) {
+    return rewardPolicyRepository.findById(id)
+        .orElseThrow(() -> new NotFoundException("Not found reward policy id :" + id));
+  }
+
 
 }

@@ -17,7 +17,6 @@ public class AllowancePolicyLineEntity extends BaseEntity {
   @Enumerated(EnumType.STRING)
   private Cycle cycle;
   private BigDecimal amount;
-  @Column(name = "allowance_policy_id")
   private Long allowancePolicyId;
   private Long allowanceId;
 }
