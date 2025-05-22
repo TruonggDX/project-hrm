@@ -28,12 +28,18 @@ public interface AllowanceMapper {
   CommonDto toCommonDto(GroupAllowanceEntity entity);
 
   @Mapping(target = "includeType", source = "includeType", qualifiedByName = "joinIncludeType")
+  @Mapping(target = "groupAllowanceId", source = "groupAllowance.id")
+  @Mapping(target = "uomId", source = "uom.id")
+  @Mapping(target = "currencyId", source = "currency.id")
   AllowanceEntity toEntity(AllowanceDto dto);
 
   @Mapping(target = "includeType", source = "includeType", qualifiedByName = "splitIncludeType")
   DetailAllowanceDto toDetailDto(AllowanceEntity entity);
 
   @Mapping(target = "includeType", source = "includeType", qualifiedByName = "joinIncludeType")
+  @Mapping(target = "groupAllowanceId", source = "groupAllowance.id")
+  @Mapping(target = "uomId", source = "uom.id")
+  @Mapping(target = "currencyId", source = "currency.id")
   void updateDto(AllowanceDto dto, @MappingTarget AllowanceEntity entity);
 
   @Mapping(target = "includeType", source = "includeType", qualifiedByName = "splitIncludeType")

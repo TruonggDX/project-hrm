@@ -27,9 +27,15 @@ public interface RewardMapper {
   CommonDto toCommonDto(GroupRewardEntity entity);
 
   @Mapping(target = "includeType", source = "includeType", qualifiedByName = "joinIncludeType")
+  @Mapping(target = "groupAllowanceId", source = "groupAllowance.id")
+  @Mapping(target = "uomId", source = "uom.id")
+  @Mapping(target = "currencyId", source = "currency.id")
   RewardEntity toEntity(RewardDto dto);
 
   @Mapping(target = "includeType", source = "includeType", qualifiedByName = "joinIncludeType")
+  @Mapping(target = "groupRewardId", source = "groupReward.id")
+  @Mapping(target = "uomId", source = "uom.id")
+  @Mapping(target = "currencyId", source = "currency.id")
   void updateDto(RewardDto dto, @MappingTarget RewardEntity entity);
 
   @Mapping(target = "includeType", source = "includeType", qualifiedByName = "splitIncludeType")
