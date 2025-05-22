@@ -67,7 +67,7 @@ public class AllowanceServiceImpl implements IAllowanceService {
   @Override
   public BaseResponse<AllowanceDto> getAllowanceById(Long id) {
     AllowanceEntity allowanceEntity = getAllowanceEntityById(id);
-    return BaseResponse.success(toDto(allowanceEntity), "Get Allowance successfully");
+    return BaseResponse.success(getDataExternal(allowanceEntity), "Get Allowance successfully");
   }
 
   @Override
@@ -81,7 +81,7 @@ public class AllowanceServiceImpl implements IAllowanceService {
         .orElseThrow(() -> new NotFoundException("Not found allowance id : " + id));
   }
 
-  public AllowanceDto toDto(AllowanceEntity entity) {
+  public AllowanceDto getDataExternal(AllowanceEntity entity) {
     AllowanceDto dto = allowanceMapper.toDto(entity);
     if (entity.getGroupAllowanceId() != null) {
       groupAllowanceRepository.findById(entity.getGroupAllowanceId())

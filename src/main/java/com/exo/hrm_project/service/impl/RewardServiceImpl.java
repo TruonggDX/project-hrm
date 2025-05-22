@@ -7,7 +7,9 @@ import com.exo.hrm_project.entity.RewardEntity;
 import com.exo.hrm_project.exception.NotFoundException;
 import com.exo.hrm_project.mapper.RewardMapper;
 import com.exo.hrm_project.mapper.common.GenericIdMapper;
+import com.exo.hrm_project.repository.GroupRewardRepository;
 import com.exo.hrm_project.repository.RewardRepository;
+import com.exo.hrm_project.service.IExternalService;
 import com.exo.hrm_project.service.IRewardService;
 import com.exo.hrm_project.specification.GenericSpecification;
 import com.exo.hrm_project.specification.filter.FilterGroupReward;
@@ -26,18 +28,20 @@ import org.springframework.stereotype.Service;
 public class RewardServiceImpl implements IRewardService {
 
   private final RewardRepository rewardRepository;
+  private final GroupRewardRepository groupRewardRepository;
   private final RewardMapper rewardMapper;
   private final GenericIdMapper genericIdMapper;
+  private final IExternalService iExternalService;
 
   @Override
   public BaseResponse<ResponsePage<ListRewardDto>> getAll(Pageable pageable, String code,
       String name) {
     GenericSpecification<RewardEntity> spec = FilterGroupReward.build(code, name);
     Page<RewardEntity> page = rewardRepository.findAll(spec, pageable);
-    List<ListRewardDto> rewardDtos = page.getContent().stream()
+    List<ListRewardDto> rewardDto = page.getContent().stream()
         .map(rewardMapper::toListDto)
         .toList();
-    return ResponseUtils.toPageResponse(page, rewardDtos, "Get All Reward");
+    return ResponseUtils.toPageResponse(page, rewardDto, "Get All Reward");
   }
 
   @Override
@@ -60,8 +64,7 @@ public class RewardServiceImpl implements IRewardService {
   @Override
   public BaseResponse<RewardDto> getRewardById(Long id) {
     RewardEntity rewardEntity = getById(id);
-    RewardDto dto = rewardMapper.toDto(rewardEntity);
-    return BaseResponse.success(dto, "Get reward successfully");
+    return BaseResponse.success(getDataExternal(rewardEntity), "Get reward successfully");
   }
 
   @Override
@@ -70,6 +73,17 @@ public class RewardServiceImpl implements IRewardService {
     RewardEntity rewardEntity = rewardRepository.findById(id)
         .orElseThrow(() -> new NotFoundException("Not found reward id : " + id));
     rewardRepository.delete(rewardEntity);
+  }
+
+  public RewardDto getDataExternal(RewardEntity entity) {
+    RewardDto dto = rewardMapper.toDto(entity);
+    if (entity.getGroupRewardId() != null) {
+      groupRewardRepository.findById(entity.getGroupRewardId())
+          .ifPresent(parent -> dto.setGroupReward(rewardMapper.toCommonDto(parent)));
+    }
+    dto.setUom(iExternalService.getUomById(entity.getUomId()));
+    dto.setCurrency(iExternalService.getCurrencyById(entity.getCurrencyId()));
+    return dto;
   }
 
   private RewardEntity getById(Long id) {
