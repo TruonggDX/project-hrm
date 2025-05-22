@@ -17,6 +17,6 @@ public class DetailAllowancePolicyDto {
   private LocalDate endDate;
   private String state;
   private String applicableType;
-  private List<CommonDto> applicableTarget;
-  private List<DetailAllowancePolicyLineDto> allowancePolicyLine;
+  private List<CommonDto> applicableTargets;
+  private List<DetailAllowancePolicyLineDto> allowancePolicyLines;
 }

@@ -2,7 +2,6 @@ package com.exo.hrm_project.mapper;
 
 import com.exo.hrm_project.dto.reward_policy.DetailRewardPolicyDto;
 import com.exo.hrm_project.dto.reward_policy.ListRewardPolicyDto;
-import com.exo.hrm_project.dto.reward_policy.RewardPolicyDto;
 import com.exo.hrm_project.entity.RewardPolicyEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.MappingTarget;
@@ -14,8 +13,8 @@ public interface RewardPolicyMapper {
 
   DetailRewardPolicyDto toDto(RewardPolicyEntity entity);
 
-  RewardPolicyEntity toEntity(RewardPolicyDto dto);
+  RewardPolicyEntity toEntity(DetailRewardPolicyDto dto);
 
-  void updateRewardPolicy(RewardPolicyDto dto, @MappingTarget RewardPolicyEntity entity);
+  void updateRewardPolicy(DetailRewardPolicyDto dto, @MappingTarget RewardPolicyEntity entity);
 
 }

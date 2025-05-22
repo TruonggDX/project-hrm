@@ -12,9 +12,9 @@ public interface AllowancePolicyMapper {
 
   ListAllowancePolicyDto toListDto(AllowancePolicyEntity entity);
 
-  AllowancePolicyEntity toEntity(AllowancePolicyDto dto);
+  AllowancePolicyEntity toEntity(DetailAllowancePolicyDto dto);
 
   DetailAllowancePolicyDto toDto(AllowancePolicyEntity entity);
 
-  void updateAllowancePolicy(AllowancePolicyDto dto, @MappingTarget AllowancePolicyEntity entity);
+  void updateAllowancePolicy(DetailAllowancePolicyDto dto, @MappingTarget AllowancePolicyEntity entity);
 }

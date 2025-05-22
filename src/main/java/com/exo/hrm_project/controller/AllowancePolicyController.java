@@ -39,7 +39,7 @@ public class AllowancePolicyController {
 
   @PostMapping
   public ResponseEntity<BaseResponse<ResponseCommon>> addAllowancePolicy(
-      @RequestBody AllowancePolicyDto allowancePolicyDto) {
+      @RequestBody DetailAllowancePolicyDto allowancePolicyDto) {
     BaseResponse<ResponseCommon> response = iAllowancePolicyService.createAllowancePolicy(
         allowancePolicyDto);
     return ResponseEntity.ok(response);
@@ -47,7 +47,7 @@ public class AllowancePolicyController {
 
   @PutMapping()
   public ResponseEntity<BaseResponse<ResponseCommon>> updateAllowance(
-     @RequestBody AllowancePolicyDto allowancePolicyDto) {
+     @RequestBody DetailAllowancePolicyDto allowancePolicyDto) {
     BaseResponse<ResponseCommon> response = iAllowancePolicyService.updateAllowancePolicy(
         allowancePolicyDto);
     return ResponseEntity.ok(response);

@@ -1,7 +1,6 @@
 package com.exo.hrm_project.mapper;
 
 import com.exo.hrm_project.dto.reward_policy.DetailRewardPolicyLineDto;
-import com.exo.hrm_project.dto.reward_policy.RewardPolicyLineDto;
 import com.exo.hrm_project.entity.RewardPolicyLineEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -11,10 +10,10 @@ import org.mapstruct.MappingTarget;
 public interface RewardPolicyLineMapper {
 
   @Mapping(source = "reward.id", target = "rewardId")
-  RewardPolicyLineEntity toEntity(RewardPolicyLineDto rewardPolicyLineDto);
+  RewardPolicyLineEntity toEntity(DetailRewardPolicyLineDto rewardPolicyLineDto);
 
   DetailRewardPolicyLineDto toDto(RewardPolicyLineEntity rewardPolicyLineEntity);
 
-  void updatePolicyLine(RewardPolicyLineDto rewardPolicyLineDto,
+  void updatePolicyLine(DetailRewardPolicyLineDto rewardPolicyLineDto,
       @MappingTarget RewardPolicyLineEntity rewardPolicyLineEntity);
 }

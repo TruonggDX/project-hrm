@@ -1,10 +1,10 @@
-package com.exo.hrm_project.dto.allowance_policy;
+package com.exo.hrm_project.dto.common;
 
 import java.time.LocalDate;
 import lombok.Data;
 
 @Data
-public class ListAllowancePolicyDto {
+public class FilterRequest {
 
   private Long id;
   private String code;
