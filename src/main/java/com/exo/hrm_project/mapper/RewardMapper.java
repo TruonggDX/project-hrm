@@ -1,6 +1,7 @@
 package com.exo.hrm_project.mapper;
 
 import com.exo.hrm_project.dto.common.CommonDto;
+import com.exo.hrm_project.dto.detail_payroll.DetailRewardDtoLine;
 import com.exo.hrm_project.dto.detail_payroll.DetailsRewardDto;
 import com.exo.hrm_project.dto.reward.ListRewardDto;
 import com.exo.hrm_project.dto.reward.RewardDto;

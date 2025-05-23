@@ -15,8 +15,6 @@ public interface AllowancePolicyLineMapper {
 
   DetailAllowancePolicyLineDto toDto(AllowancePolicyLineEntity allowancePolicyLineEntity);
 
-  AllowancePolicyLineDto toPolicyLineDto(AllowancePolicyLineEntity allowancePolicyLine);
-
   void updatePolicyLine(DetailAllowancePolicyLineDto allowancePolicyLineDto,
       @MappingTarget AllowancePolicyLineEntity allowancePolicyLineEntity);
 }

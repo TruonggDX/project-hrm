@@ -5,6 +5,7 @@ import com.exo.hrm_project.dto.allowance.AllowanceDto;
 import com.exo.hrm_project.dto.allowance.ListAllowanceDto;
 import com.exo.hrm_project.dto.allowance_policy.DetailAllowanceDto;
 import com.exo.hrm_project.dto.common.CommonDto;
+import com.exo.hrm_project.dto.detail_payroll.AllowanceDtoLine;
 import com.exo.hrm_project.dto.detail_payroll.DetailsAllowanceDto;
 import com.exo.hrm_project.entity.AllowanceEntity;
 import com.exo.hrm_project.entity.GroupAllowanceEntity;

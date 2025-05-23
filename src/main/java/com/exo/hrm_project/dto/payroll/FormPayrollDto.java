@@ -13,7 +13,7 @@ public class FormPayrollDto {
   private CommonDto employee;
   private CommonDto department;
   private CommonDto position;
-  private String type;
+
   private String cycle;
   private BigDecimal totalAllowanceAmount;
   private LocalDate startDate;

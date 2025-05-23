@@ -14,5 +14,5 @@ public class ListPayrollDto {
   private String type;
   private String cycle;
   private BigDecimal totalAllowanceAmount;
-  private List<PayrolleLineDto> payrollLine;
+  private List<PayrolleLineDto> payrollLines;
 }

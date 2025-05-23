@@ -13,6 +13,7 @@ import com.exo.hrm_project.specification.GenericSpecification;
 import com.exo.hrm_project.specification.filter.FilterGroupAllowance;
 import com.exo.hrm_project.utils.response.BaseResponse;
 import com.exo.hrm_project.utils.response.ResponsePage;
+import com.exo.hrm_project.utils.response.ResponseUtil;
 import com.exo.hrm_project.utils.response.ResponseUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -26,6 +27,8 @@ public class GroupAllowanceServiceImpl implements IGroupAllowanceService {
   private final GroupAllowanceRepository repo;
   private final GroupAllowanceMapper mapper;
   private final GenericIdMapper genericIdMapper;
+  private final ResponseUtil responseUtil;
+
 
   @Override
   public BaseResponse<ResponsePage<ListGroupAllowanceDto>> getAllGroupAllowance(Pageable pageable,
@@ -42,8 +45,9 @@ public class GroupAllowanceServiceImpl implements IGroupAllowanceService {
   public BaseResponse<ResponseCommon> createGroupAllowance(GroupAllowanceDto groupAllowanceDto) {
     GroupAllowanceEntity groupAllowanceEntity = mapper.toEntity(groupAllowanceDto);
     groupAllowanceEntity = repo.save(groupAllowanceEntity);
-    return BaseResponse.success(genericIdMapper.toResponseCommon(groupAllowanceEntity),
-        "Created GroupAllowance Successfully");
+    return responseUtil.success(genericIdMapper.toResponseCommon(groupAllowanceEntity),
+        "response.success");
+
   }
 
   @Override
@@ -51,8 +55,9 @@ public class GroupAllowanceServiceImpl implements IGroupAllowanceService {
     GroupAllowanceEntity groupAllowance = getGroupAllowanceById(groupAllowanceDto.getId());
     mapper.updateGroupAllowance(groupAllowanceDto, groupAllowance);
     groupAllowance = repo.save(groupAllowance);
-    return BaseResponse.success(genericIdMapper.toResponseCommon(groupAllowance),
-        "Updated GroupAllowance Successfully");
+    return responseUtil.success(genericIdMapper.toResponseCommon(groupAllowance),
+        "response.success");
+
   }
 
   @Override
@@ -60,7 +65,7 @@ public class GroupAllowanceServiceImpl implements IGroupAllowanceService {
     GroupAllowanceEntity entity = getGroupAllowanceById(id);
     GroupAllowanceDto dto = mapper.toDto(entity);
     getParent(entity, dto);
-    return BaseResponse.success(dto, "Get GroupAllowance Successfully");
+    return responseUtil.success(dto, "response.success");
   }
 
   @Override

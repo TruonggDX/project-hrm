@@ -13,4 +13,8 @@ public interface PayrollLineRepository extends JpaRepository<PayrollLineEntity, 
   @Query("SELECT p FROM PayrollLineEntity p WHERE p.payrollId=:payrollId")
   List<PayrollLineEntity> findPayrollById(@Param("payrollId") Long payrollId);
 
+  @Query("SELECT p FROM PayrollLineEntity p WHERE p.payrollId IN :ids")
+  List<PayrollLineEntity> findByPayrollIds(@Param("ids") List<Long> ids);
+
+
 }

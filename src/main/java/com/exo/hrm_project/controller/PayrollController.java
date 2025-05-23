@@ -42,14 +42,14 @@ public class PayrollController {
 
   @PostMapping
   public ResponseEntity<BaseResponse<ResponseCommon>> createAllowance(
-      @RequestBody FormPayrollDto formPayrollDto) {
+      @RequestBody PayrollDto formPayrollDto) {
     BaseResponse<ResponseCommon> response = iPayrolleService.createPayroll(formPayrollDto);
     return ResponseEntity.ok(response);
   }
 
   @PutMapping()
   public ResponseEntity<BaseResponse<ResponseCommon>> updateAllowance(
-      @RequestBody FormPayrollDto formPayrollDto) {
+      @RequestBody PayrollDto formPayrollDto) {
     BaseResponse<ResponseCommon> response = iPayrolleService.updatePayroll(formPayrollDto);
     return ResponseEntity.ok(response);
   }
